@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trevus Barbearia · Agende com Kelson, Júnior ou Hariel em Salvador</title>
+<meta name="description" content="Barbearia na Federação, Salvador. Escolha o barbeiro, o serviço e o horário e confirme na hora, sem app e sem cadastro. Seu estilo, nossa assinatura.">
+<meta name="theme-color" content="#07100C">
+<link rel="icon" href="fotos/logo.jpg">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Trevus Barbearia · Agende seu horário">
+<meta property="og:description" content="Escolha o barbeiro, o serviço e o horário. Confirmação na hora, sem app.">
+<meta property="og:image" content="fotos/salao.jpg">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/estilo.css">
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BarberShop",
+  "name":"Trevus Barbearia",
+  "slogan":"Seu estilo, nossa assinatura",
+  "image":"fotos/salao.jpg",
+  "telephone":"+5571993911293",
+  "priceRange":"R$",
+  "address":{
+    "@type":"PostalAddress",
+    "streetAddress":"Rua Sérgio de Carvalho, 28",
+    "addressLocality":"Salvador",
+    "addressRegion":"BA",
+    "addressCountry":"BR"
+  },
+  "sameAs":["https://www.instagram.com/trevusbarbearia/"],
+  "openingHoursSpecification":[
+    {"@type":"OpeningHoursSpecification","dayOfWeek":"Sunday","opens":"08:00","closes":"12:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":"Monday","opens":"14:00","closes":"18:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":["Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"08:00","closes":"12:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":["Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"13:00","closes":"20:00"}
+  ]
+}
+</script>
+</head>
+<body>
+
+<div id="faixa-demo" class="faixa-demo" hidden>
+  <b>Versão de demonstração.</b> A agenda funciona de verdade aqui, mas os horários ficam só neste aparelho até ligarmos o banco de dados.
+</div>
+
+<!-- ================= TOPO ================= -->
+<header class="topo">
+  <div class="wrap topo-in">
+    <a class="marca" href="#" aria-label="Trevus Barbearia, início">
+      <img src="fotos/logo.jpg" alt="" width="44" height="44">
+      <span><b>TREVUS</b><small>Barbearia</small></span>
+    </a>
+    <nav class="menu">
+      <a href="#equipe">Equipe</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#agendar">Agendar</a>
+      <a href="#local">Onde fica</a>
+      <a href="#meu-horario">Meu horário</a>
+    </nav>
+    <a class="btn btn-ouro" href="#agendar">Agendar horário</a>
+  </div>
+</header>
+
+<!-- ================= CAPA ================= -->
+<section class="capa">
+  <div class="capa-foto" style="background-image:url('fotos/salao.jpg')"></div>
+  <div class="wrap capa-in">
+    <div class="capa-txt">
+    <span class="selo-novo">✦ Casa nova · reformada e inaugurada em setembro</span>
+    <h1>Seu estilo,<br><span class="ouro-texto">nossa assinatura.</span></h1>
+    <p class="lead">
+      Três barbeiros, uma casa reformada na Federação e agenda aberta 24 horas.
+      Escolha com quem, o serviço e o horário, e confirme na hora. Sem aplicativo,
+      sem cadastro e sem esperar resposta no WhatsApp.
+    </p>
+    <div class="capa-ctas">
+      <a class="btn btn-ouro" href="#agendar">Escolher meu horário</a>
+      <a class="btn btn-linha" href="#servicos">Ver serviços e preços</a>
+    </div>
+    <div class="capa-rostos">
+      <div class="pilha">
+        <img src="fotos/kelson.jpg" alt="Kelson" width="42" height="42">
+        <img src="fotos/junior.jpg" alt="Júnior" width="42" height="42">
+        <img src="fotos/hariel.jpg" alt="Hariel" width="42" height="42">
+      </div>
+      <span><b>Kelson, Júnior e Hariel</b><br>os sócios que cortam o seu cabelo</span>
+    </div>
+    </div>
+    <figure class="capa-quadro">
+      <img src="fotos/salao.jpg" width="1400" height="1867"
+           alt="Hariel, Júnior e Kelson no salão reformado da Trevus, entre as cadeiras de couro e a parede de folhagem com o letreiro dourado.">
+    </figure>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="selos">
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><b>Agendamento online</b> 24h</span>
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Também por <b>ordem de chegada</b></span>
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Pix, cartão e dinheiro</span>
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Rua Sérgio de Carvalho, 28 · <b>Federação</b></span>
+  </div>
+</div>
+
+<!-- ================= EQUIPE ================= -->
+<section class="secao" id="equipe">
+  <div class="wrap">
+    <p class="olho">A equipe</p>
+    <h2>Quem assina o seu corte</h2>
+    <p class="sub">
+      A Trevus é dos três barbeiros que atendem nela. Escolha o seu de sempre
+      ou deixe a agenda te encaixar com quem estiver livre primeiro.
+    </p>
+    <div class="equipe" id="equipe-lista">
+      <article class="membro">
+        <img src="fotos/kelson.jpg" alt="Kelson, barbeiro e sócio da Trevus, de camisa preta em frente à parede de folhagem." width="800" height="1000">
+        <div class="membro-info">
+          <h3>Kelson</h3>
+          <p>Sócio · Barbeiro</p>
+          <div class="membro-acoes">
+            <button class="btn btn-ouro" type="button" data-agendar-com="kelson">Agendar com Kelson</button>
+            <a class="btn btn-linha" href="https://www.instagram.com/kelsonsbarbershop/" target="_blank" rel="noopener" aria-label="Instagram do Kelson">@</a>
+          </div>
+        </div>
+      </article>
+      <article class="membro">
+        <img src="fotos/junior.jpg" alt="Júnior, barbeiro e sócio da Trevus, de braços cruzados apoiado na cadeira." width="800" height="1000">
+        <div class="membro-info">
+          <h3>Júnior</h3>
+          <p>Sócio · Barbeiro</p>
+          <div class="membro-acoes">
+            <button class="btn btn-ouro" type="button" data-agendar-com="junior">Agendar com Júnior</button>
+          </div>
+        </div>
+      </article>
+      <article class="membro">
+        <img src="fotos/hariel.jpg" alt="Hariel, barbeiro e sócio da Trevus, de óculos, apoiado na cadeira do salão." width="800" height="1000">
+        <div class="membro-info">
+          <h3>Hariel</h3>
+          <p>Sócio · Barbeiro</p>
+          <div class="membro-acoes">
+            <button class="btn btn-ouro" type="button" data-agendar-com="hariel">Agendar com Hariel</button>
+            <a class="btn btn-linha" href="https://www.instagram.com/harielbarber13/" target="_blank" rel="noopener" aria-label="Instagram do Hariel">@</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SERVIÇOS ================= -->
+<section class="secao" id="servicos" style="padding-top:0">
+  <div class="wrap">
+    <p class="olho">Cardápio</p>
+    <h2>Serviços e preços</h2>
+    <p class="sub">
+      Cada serviço tem o tempo que realmente leva, e é por isso que a agenda
+      não te encaixa em cima de outro cliente. Toque em qualquer um para marcar.
+    </p>
+    <div id="cardapio" style="margin-top:2.2rem">
+      <div class="carregando">Carregando o cardápio…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AGENDAMENTO ================= -->
+<section class="secao agendar" id="agendar">
+  <div class="wrap">
+    <p class="olho">Agendamento</p>
+    <h2>Marque em quatro toques</h2>
+    <p class="sub">
+      O que aparece aqui está vago de verdade, e a confirmação sai na hora.
+    </p>
+
+    <div class="painel" id="agendar-app">
+
+      <div class="passos" id="passos">
+        <div class="passo" data-estado="atual">1 · Barbeiro</div>
+        <div class="passo" data-estado="aberto">2 · Serviço</div>
+        <div class="passo" data-estado="aberto">3 · Dia e hora</div>
+        <div class="passo" data-estado="aberto">4 · Seus dados</div>
+      </div>
+
+      <div class="escolhas" id="escolhas" hidden></div>
+
+      <!-- 1 -->
+      <div class="etapa" data-etapa="1" data-ativa>
+        <h3>Com quem você quer cortar?</h3>
+        <p class="dica">Cada barbeiro tem a própria agenda. Sem preferência, você vê todos os horários livres da casa.</p>
+        <div class="lista-barbeiros" id="lista-barbeiros"></div>
+      </div>
+
+      <!-- 2 -->
+      <div class="etapa" data-etapa="2">
+        <h3>O que vamos fazer?</h3>
+        <p class="dica">O tempo na cadeira muda conforme o serviço, por isso ele vem antes da hora.</p>
+        <div id="lista-servicos"></div>
+        <div class="acoes"><button class="voltar" type="button" data-voltar="1">← Trocar o barbeiro</button></div>
+      </div>
+
+      <!-- 3 -->
+      <div class="etapa" data-etapa="3">
+        <h3>Escolha o dia e a hora</h3>
+        <div class="fita" id="fita-dias"></div>
+        <p class="titulo-dia" id="titulo-dia"></p>
+        <div id="caixa-horas"></div>
+        <div class="acoes"><button class="voltar" type="button" data-voltar="2">← Trocar o serviço</button></div>
+      </div>
+
+      <!-- 4 -->
+      <div class="etapa" data-etapa="4">
+        <h3>Quase lá</h3>
+        <p class="dica">Só falta saber quem vai sentar na cadeira.</p>
+        <div class="resumo" id="resumo"></div>
+        <form id="form-cliente" novalidate>
+          <div class="campos">
+            <div class="campo">
+              <label for="cli-nome">Seu nome</label>
+              <input id="cli-nome" name="nome" type="text" autocomplete="name" placeholder="Como te chamam" required>
+            </div>
+            <div class="campo">
+              <label for="cli-tel">WhatsApp</label>
+              <input id="cli-tel" name="tel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(71) 9 0000-0000" required>
+              <p class="ajuda">Serve para te achar se precisar remarcar. Não vai para lista de propaganda.</p>
+            </div>
+            <div class="campo">
+              <label for="cli-obs">Observação <span style="text-transform:none;letter-spacing:0;font-weight:500">(opcional)</span></label>
+              <textarea id="cli-obs" name="obs" maxlength="240" placeholder="Ex: o mesmo do mês passado, degradê baixo"></textarea>
+            </div>
+          </div>
+          <div id="msg-form"></div>
+          <div class="acoes">
+            <button class="btn btn-ouro" id="btn-confirmar" type="submit">Confirmar horário</button>
+            <button class="voltar" type="button" data-voltar="3">← Trocar a hora</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 5 -->
+      <div class="etapa" data-etapa="5">
+        <div class="sucesso">
+          <div class="selo-ok" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3>Horário confirmado</h3>
+          <p class="com">com <span id="ok-barbeiro"></span></p>
+          <p class="dica" id="ok-linha" style="color:var(--cinza);margin:.4rem 0 1rem"></p>
+          <p style="font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cinza);font-weight:800">Seu código</p>
+          <div class="codigo" id="ok-codigo"></div>
+          <p style="max-width:34rem;margin:0 auto 1.4rem;color:var(--cinza);font-size:.92rem">
+            Guarde esse código: é com ele que você consulta ou cancela sozinho,
+            até 2 horas antes. Chegue uns 5 minutinhos antes.
+          </p>
+          <div class="acoes" style="justify-content:center">
+            <a class="btn btn-zap" id="ok-zap" target="_blank" rel="noopener">Avisar no WhatsApp</a>
+            <a class="btn btn-linha" id="ok-ics">Salvar no calendário</a>
+            <button class="btn btn-linha" id="btn-novo" type="button">Marcar outro</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= MEU HORÁRIO ================= -->
+<section class="secao" id="meu-horario">
+  <div class="wrap dupla">
+    <div>
+      <p class="olho">Já marcou?</p>
+      <h2>Consultar ou cancelar</h2>
+      <p class="sub">
+        Deu imprevisto? Cancele por aqui mesmo, sem precisar mandar mensagem.
+        A vaga volta na hora para a agenda e outro cliente aproveita.
+        O cancelamento pelo site vale até <b>2 horas antes</b>. Depois disso, chame no WhatsApp.
+      </p>
+    </div>
+    <div class="cartao">
+      <form id="form-consulta">
+        <div class="campos">
+          <div class="campo">
+            <label for="con-codigo">Código do agendamento</label>
+            <input id="con-codigo" type="text" placeholder="Ex: A3F91C" style="text-transform:uppercase" required>
+          </div>
+          <div class="campo">
+            <label for="con-tel">WhatsApp usado</label>
+            <input id="con-tel" type="tel" inputmode="numeric" placeholder="(71) 9 0000-0000" required>
+          </div>
+          <button class="btn btn-ouro btn-bloco" type="submit">Buscar meu horário</button>
+        </div>
+      </form>
+      <div id="saida-consulta"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= A CASA ================= -->
+<section class="secao" id="casa" style="background:var(--mata);border-block:1px solid var(--borda)">
+  <div class="wrap dupla">
+    <div class="moldura">
+      <img src="fotos/equipe.jpg" loading="lazy" width="720" height="960"
+           alt="Kelson, Júnior e Hariel abraçados na inauguração, em frente ao letreiro dourado da Trevus na parede de folhagem.">
+    </div>
+    <div>
+      <p class="olho">A casa</p>
+      <h2>Um novo capítulo, <span class="ouro-texto">com o mesmo endereço</span></h2>
+      <p class="sub">
+        Kelson, Júnior e Hariel já cortavam juntos na Rua Sérgio de Carvalho.
+        Em setembro de 2026 a casa passou por reforma, ganhou nome novo e virou
+        a Trevus: parede verde, letreiro dourado e cadeira de couro. Não é só um corte,
+        é um momento para cuidar de você e valorizar o seu estilo.
+      </p>
+      <div class="numeros">
+        <div class="numero"><b>3</b><span>barbeiros sócios</span></div>
+        <div class="numero"><b>11</b><span>serviços</span></div>
+        <div class="numero"><b>08/09</b><span>inauguração</span></div>
+      </div>
+      <div class="acoes">
+        <a class="btn btn-ouro" href="#agendar">Marcar meu horário</a>
+        <a class="btn btn-linha" href="https://www.instagram.com/trevusbarbearia/" target="_blank" rel="noopener">Ver no Instagram</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GALERIA ================= -->
+<section class="secao" id="galeria">
+  <div class="wrap">
+    <p class="olho">Por dentro</p>
+    <h2>A casa reformada</h2>
+    <div class="galeria">
+      <figure>
+        <img src="fotos/salao.jpg" loading="lazy" alt="Salão da Trevus: cadeiras de couro preto, espelhos com luz dourada e a parede de folhagem com o letreiro ao fundo.">
+        <figcaption>O salão</figcaption>
+      </figure>
+      <figure>
+        <img src="fotos/clientes.jpg" loading="lazy" alt="Os sócios com clientes na inauguração.">
+      </figure>
+      <figure>
+        <img src="fotos/festa.jpg" loading="lazy" alt="Família e amigos reunidos na inauguração da Trevus.">
+      </figure>
+      <figure style="grid-column:span 2">
+        <img src="fotos/equipe.jpg" loading="lazy" style="object-position:50% 30%" alt="Os três sócios na inauguração.">
+        <figcaption>Inauguração · 08/09</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ONDE FICA ================= -->
+<section class="secao" id="local" style="padding-top:0">
+  <div class="wrap">
+    <p class="olho">Onde fica</p>
+    <h2>Rua Sérgio de Carvalho, 28</h2>
+
+    <div class="dupla" style="margin-top:2.2rem;align-items:start">
+      <div class="info-local">
+        <div class="info-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div>
+            <b class="rot">Endereço</b>
+            Rua Sérgio de Carvalho, 28<br>
+            Federação, Salvador, BA
+          </div>
+        </div>
+
+        <div class="info-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <div style="width:100%">
+            <b class="rot">Horário de atendimento</b>
+            <table class="tabela-horario" id="tabela-horario">
+              <tr data-dia="1"><td>Segunda</td><td>14h às 18h</td></tr>
+              <tr data-dia="2"><td>Terça</td><td>8h às 20h</td></tr>
+              <tr data-dia="3"><td>Quarta</td><td>8h às 20h</td></tr>
+              <tr data-dia="4"><td>Quinta</td><td>8h às 20h</td></tr>
+              <tr data-dia="5"><td>Sexta</td><td>8h às 20h</td></tr>
+              <tr data-dia="6"><td>Sábado</td><td>8h às 20h</td></tr>
+              <tr data-dia="0"><td>Domingo</td><td>8h às 12h</td></tr>
+            </table>
+            <p style="margin-top:.6rem;font-size:.82rem;color:var(--cinza-fraco)">
+              Almoço de 12h às 13h, de terça a sábado.
+            </p>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          <div>
+            <b class="rot">Pagamento</b>
+            Pix, dinheiro, cartão de débito e crédito.
+          </div>
+        </div>
+
+        <div class="acoes" style="margin-top:.4rem">
+          <a class="btn btn-linha" id="link-maps" target="_blank" rel="noopener" href="https://maps.app.goo.gl/bP7qy1qc5hcHm5Vj6">Abrir no Google Maps</a>
+          <a class="btn btn-zap" id="link-zap" target="_blank" rel="noopener" href="https://wa.me/5571993911293">Chamar no WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="mapa">
+        <iframe title="Mapa da Trevus Barbearia" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=Rua%20S%C3%A9rgio%20de%20Carvalho%2C%2028%2C%20Federa%C3%A7%C3%A3o%2C%20Salvador%20-%20BA&output=embed"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RODAPÉ ================= -->
+<footer class="rodape">
+  <div class="wrap">
+    <div class="rodape-in">
+      <div style="max-width:22rem">
+        <a class="marca" href="#" style="margin-bottom:.9rem">
+          <img src="fotos/logo.jpg" alt="" width="44" height="44">
+          <span><b>TREVUS</b><small>Barbearia</small></span>
+        </a>
+        <p>Seu estilo, nossa assinatura. Rua Sérgio de Carvalho, 28, Federação, Salvador, BA.</p>
+      </div>
+      <div>
+        <b class="rodape-titulo">Navegar</b>
+        <ul class="rodape-links">
+          <li><a href="#equipe">Equipe</a></li>
+          <li><a href="#agendar">Agendar horário</a></li>
+          <li><a href="#meu-horario">Consultar ou cancelar</a></li>
+          <li><a href="#local">Como chegar</a></li>
+        </ul>
+      </div>
+      <div>
+        <b class="rodape-titulo">Falar com a gente</b>
+        <ul class="rodape-links">
+          <li><a href="https://wa.me/5571993911293" target="_blank" rel="noopener">WhatsApp (71) 9 9391-1293</a></li>
+          <li><a href="https://www.instagram.com/trevusbarbearia/" target="_blank" rel="noopener">@trevusbarbearia</a></li>
+          <li><a href="admin.html">Área dos barbeiros</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="creditos">
+      <span>© <span id="ano"></span> Trevus Barbearia</span>
+      <span>Guardamos seu nome e WhatsApp só para organizar a agenda. Para apagar seus dados, é só pedir no WhatsApp.</span>
+    </div>
+  </div>
+</footer>
+
+<a class="flutua" href="#agendar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+  Agendar
+</a>
+
+<script src="assets/config.js"></script>
+<!-- Este bloco vem ANTES de agenda.js: registra o ouvinte que recebe
+     barbeiros e serviços assim que carregam. -->
+<script>
+(function () {
+  var CFG = window.TV;
+  document.getElementById('ano').textContent = new Date().getFullYear();
+  if (CFG.modoDemo) document.getElementById('faixa-demo').hidden = false;
+
+  var hoje = new Date().getDay();
+  var linha = document.querySelector('#tabela-horario tr[data-dia="' + hoje + '"]');
+  if (linha) linha.setAttribute('data-hoje', '');
+
+  function irAgendar() { document.getElementById('agendar').scrollIntoView({ behavior: 'smooth' }); }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-agendar-com]'), function (b) {
+    b.addEventListener('click', function () {
+      if (CFG.agendarCom) CFG.agendarCom(b.getAttribute('data-agendar-com'));
+      irAgendar();
+    });
+  });
+
+  function pintaCardapio(lista) {
+    var alvo = document.getElementById('cardapio');
+    alvo.innerHTML = '';
+    var grupos = {};
+    lista.forEach(function (s) { var g = s.categoria || 'Serviços'; (grupos[g] = grupos[g] || []).push(s); });
+    Object.keys(grupos).forEach(function (g) {
+      var bloco = document.createElement('div');
+      bloco.className = 'cardapio-grupo';
+      var t = document.createElement('div');
+      t.className = 'cardapio-titulo';
+      t.textContent = g;
+      bloco.appendChild(t);
+      var grade = document.createElement('div');
+      grade.className = 'grade-servicos';
+      grupos[g].forEach(function (s) {
+        var card = document.createElement('article');
+        card.className = 'servico';
+        var valor = 'R$ ' + (s.preco_centavos / 100).toFixed(2).replace('.', ',');
+        card.innerHTML =
+          '<div class="servico-txt"><h3></h3><p></p>' +
+            '<span class="tempo"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' +
+            s.duracao_min + ' min</span></div>' +
+          '<div class="servico-dir"><span class="preco">' + (s.a_partir_de ? '<small>a partir de</small>' : '') + valor + '</span>' +
+            '<button class="marcar" type="button">Agendar →</button></div>';
+        card.querySelector('h3').textContent = s.nome;
+        card.querySelector('p').textContent = s.descricao || '';
+        card.querySelector('.marcar').addEventListener('click', function () {
+          CFG.agendarServico(s.id);
+          irAgendar();
+        });
+        grade.appendChild(card);
+      });
+      bloco.appendChild(grade);
+      alvo.appendChild(bloco);
+    });
+  }
+
+  document.addEventListener('tv:dados', function (ev) { pintaCardapio(ev.detail.servicos); });
+  if (CFG.servicosCarregados) pintaCardapio(CFG.servicosCarregados);
+})();
+</script>
+<script src="assets/agenda.js"></script>
+</body>
+</html>
