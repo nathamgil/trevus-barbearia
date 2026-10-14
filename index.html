@@ -125,10 +125,11 @@
         <img src="fotos/kelson.jpg" alt="Kelson, barbeiro e sócio da Trevus, de camisa preta em frente à parede de folhagem." width="800" height="1000">
         <div class="membro-info">
           <h3>Kelson</h3>
-          <p>Sócio · Barbeiro</p>
+          <p>Cortes na tesoura · 4 anos</p>
+          <blockquote>“Cortes que comunicam poder.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="kelson">Agendar com Kelson</button>
-            <a class="btn btn-linha" href="https://www.instagram.com/kelsonsbarbershop/" target="_blank" rel="noopener" aria-label="Instagram do Kelson">@</a>
+            <a class="btn btn-linha" href="https://www.instagram.com/kelsonstrevus/" target="_blank" rel="noopener" aria-label="Instagram do Kelson">@kelsonstrevus</a>
           </div>
         </div>
       </article>
@@ -136,20 +137,22 @@
         <img src="fotos/junior.jpg" alt="Júnior, barbeiro e sócio da Trevus, de braços cruzados apoiado na cadeira." width="800" height="1000">
         <div class="membro-info">
           <h3>Júnior</h3>
-          <p>Sócio · Barbeiro</p>
+          <p>Química e platinado · 10 anos</p>
+          <blockquote>“Autoestima renovada em cada atendimento.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="junior">Agendar com Júnior</button>
-          </div>
+            <a class="btn btn-linha" href="https://www.instagram.com/juniortrevus/" target="_blank" rel="noopener" aria-label="Instagram do Júnior">@juniortrevus</a></div>
         </div>
       </article>
       <article class="membro">
         <img src="fotos/hariel.jpg" alt="Hariel, barbeiro e sócio da Trevus, de óculos, apoiado na cadeira do salão." width="800" height="1000">
         <div class="membro-info">
           <h3>Hariel</h3>
-          <p>Sócio · Barbeiro</p>
+          <p>Degradê · 13 anos</p>
+          <blockquote>“Experiência que transforma técnica em excelência.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="hariel">Agendar com Hariel</button>
-            <a class="btn btn-linha" href="https://www.instagram.com/harielbarber13/" target="_blank" rel="noopener" aria-label="Instagram do Hariel">@</a>
+            <a class="btn btn-linha" href="https://www.instagram.com/haridade1996/" target="_blank" rel="noopener" aria-label="Instagram do Hariel">@haridade1996</a>
           </div>
         </div>
       </article>
@@ -172,22 +175,34 @@
   </div>
 </section>
 
+<!-- ================= PLANOS ================= -->
+<section class="secao" id="planos" style="padding-top:0">
+  <div class="wrap">
+    <p class="olho">Planos mensais</p>
+    <h2>Corte em dia, todo mês</h2>
+    <p class="sub">Assinante não paga sinal para marcar. Fale com a gente no WhatsApp para assinar.</p>
+    <div class="planos" id="planos-lista"></div>
+  </div>
+</section>
+
 <!-- ================= AGENDAMENTO ================= -->
 <section class="secao agendar" id="agendar">
   <div class="wrap">
     <p class="olho">Agendamento</p>
-    <h2>Marque em quatro toques</h2>
+    <h2>Marque e garanta com o sinal</h2>
     <p class="sub">
-      O que aparece aqui está vago de verdade, e a confirmação sai na hora.
+      O que aparece aqui está vago de verdade. Você paga 50% de sinal no Pix,
+      o horário fica garantido na hora e o resto você acerta na barbearia.
     </p>
 
     <div class="painel" id="agendar-app">
 
       <div class="passos" id="passos">
         <div class="passo" data-estado="atual">1 · Barbeiro</div>
-        <div class="passo" data-estado="aberto">2 · Serviço</div>
+        <div class="passo" data-estado="aberto">2 · Serviços</div>
         <div class="passo" data-estado="aberto">3 · Dia e hora</div>
         <div class="passo" data-estado="aberto">4 · Seus dados</div>
+        <div class="passo" data-estado="aberto">5 · Sinal</div>
       </div>
 
       <div class="escolhas" id="escolhas" hidden></div>
@@ -202,8 +217,12 @@
       <!-- 2 -->
       <div class="etapa" data-etapa="2">
         <h3>O que vamos fazer?</h3>
-        <p class="dica">O tempo na cadeira muda conforme o serviço, por isso ele vem antes da hora.</p>
+        <p class="dica">Marque quantos serviços quiser. O tempo na cadeira soma sozinho.</p>
         <div id="lista-servicos"></div>
+        <div class="barra-servicos" id="barra-servicos" hidden>
+          <span><span id="bs-txt"></span><b id="bs-total"></b></span>
+          <button class="btn btn-ouro" id="btn-servicos" type="button">Escolher o horário →</button>
+        </div>
         <div class="acoes"><button class="voltar" type="button" data-voltar="1">← Trocar o barbeiro</button></div>
       </div>
 
@@ -230,7 +249,12 @@
             <div class="campo">
               <label for="cli-tel">WhatsApp</label>
               <input id="cli-tel" name="tel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(71) 9 0000-0000" required>
-              <p class="ajuda">Serve para te achar se precisar remarcar. Não vai para lista de propaganda.</p>
+              <p class="ajuda">Com ele você consulta, cancela ou remarca. Seu crédito também fica nele.</p>
+            </div>
+            <div class="campo">
+              <label for="cli-email">E-mail</label>
+              <input id="cli-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="voce@email.com" required>
+              <p class="ajuda">A confirmação e o lembrete da véspera chegam aqui, já com o convite para a sua agenda.</p>
             </div>
             <div class="campo">
               <label for="cli-obs">Observação <span style="text-transform:none;letter-spacing:0;font-weight:500">(opcional)</span></label>
@@ -239,7 +263,7 @@
           </div>
           <div id="msg-form"></div>
           <div class="acoes">
-            <button class="btn btn-ouro" id="btn-confirmar" type="submit">Confirmar horário</button>
+            <button class="btn btn-ouro" id="btn-confirmar" type="submit">Reservar e pagar o sinal</button>
             <button class="voltar" type="button" data-voltar="3">← Trocar a hora</button>
           </div>
         </form>
@@ -247,18 +271,48 @@
 
       <!-- 5 -->
       <div class="etapa" data-etapa="5">
+        <div class="pagamento">
+          <div class="pg-topo">
+            <div>
+              <p class="pg-rot">Sinal de 50%</p>
+              <p class="pg-valor" id="pg-valor"></p>
+              <p class="pg-resto" id="pg-resto"></p>
+            </div>
+            <div class="pg-tempo" aria-live="polite">
+              <span>Vaga segurada por</span>
+              <b id="pg-relogio">15:00</b>
+            </div>
+          </div>
+          <p class="pg-linha" id="pg-linha"></p>
+          <div class="pg-demo" id="pg-demo" hidden>
+            <svg viewBox="0 0 29 29" aria-hidden="true"><path fill="currentColor" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM22 0h7v7h-7zM23 1v5h5V1zM24 2h3v3h-3zM0 22h7v7H0zM1 23v5h5v-5zM2 24h3v3H2zM9 0h2v2H9zM12 1h3v2h-3zM9 4h4v2H9zM15 4h2v4h-2zM18 0h2v3h-2zM10 8h3v2h-3zM0 9h3v2H0zM5 9h3v3H5zM14 10h4v2h-4zM20 9h3v2h-3zM25 9h4v3h-4zM1 13h4v2H1zM8 13h3v3H8zM12 14h2v4h-2zM16 13h3v2h-3zM22 13h2v4h-2zM26 14h3v2h-3zM0 17h2v3H0zM4 17h3v2H4zM9 18h2v2H9zM15 17h4v2h-4zM20 18h1v3h-1zM24 18h4v2h-4zM9 22h4v2H9zM15 21h2v3h-2zM19 22h3v3h-3zM24 22h2v2h-2zM27 23h2v4h-2zM10 26h3v3h-3zM14 25h3v2h-3zM18 27h4v2h-4zM23 26h3v3h-3z"/></svg>
+            <p><b>Pix de demonstração.</b> No site de verdade, este botão abre o pagamento da InfinitePay do barbeiro e o horário confirma sozinho quando o Pix cai.</p>
+          </div>
+          <div id="pg-msg"></div>
+          <div class="acoes">
+            <button class="btn btn-ouro" id="btn-pagar" type="button">Pagar o sinal</button>
+            <button class="voltar" id="btn-desistir" type="button">← Trocar o horário</button>
+          </div>
+          <p class="pg-regras">Cancelou até 1h antes? O sinal vira crédito com o mesmo barbeiro. Faltou sem avisar? O sinal fica com a barbearia.</p>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="etapa" data-etapa="6">
         <div class="sucesso">
           <div class="selo-ok" aria-hidden="true">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           </div>
           <h3>Horário confirmado</h3>
           <p class="com">com <span id="ok-barbeiro"></span></p>
-          <p class="dica" id="ok-linha" style="color:var(--cinza);margin:.4rem 0 1rem"></p>
+          <p class="dica" id="ok-linha" style="color:var(--cinza);margin:.4rem 0 .3rem"></p>
+          <p class="ok-sinal" id="ok-sinal"></p>
           <p style="font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cinza);font-weight:800">Seu código</p>
           <div class="codigo" id="ok-codigo"></div>
           <p style="max-width:34rem;margin:0 auto 1.4rem;color:var(--cinza);font-size:.92rem">
-            Guarde esse código: é com ele que você consulta ou cancela sozinho,
-            até 2 horas antes. Chegue uns 5 minutinhos antes.
+            Guarde esse código: com ele você consulta, cancela ou remarca sozinho
+            até 1 hora antes. A confirmação também foi para o seu e-mail.
+            Tolerância de atraso: 5 minutos.
           </p>
           <div class="acoes" style="justify-content:center">
             <a class="btn btn-zap" id="ok-zap" target="_blank" rel="noopener">Avisar no WhatsApp</a>
@@ -277,11 +331,11 @@
   <div class="wrap dupla">
     <div>
       <p class="olho">Já marcou?</p>
-      <h2>Consultar ou cancelar</h2>
+      <h2>Consultar, remarcar ou cancelar</h2>
       <p class="sub">
-        Deu imprevisto? Cancele por aqui mesmo, sem precisar mandar mensagem.
-        A vaga volta na hora para a agenda e outro cliente aproveita.
-        O cancelamento pelo site vale até <b>2 horas antes</b>. Depois disso, chame no WhatsApp.
+        Deu imprevisto? Resolva por aqui, sem mandar mensagem. Até <b>1 hora antes</b>
+        você remarca (até 2 vezes, com o mesmo barbeiro) ou cancela, e o sinal vira
+        crédito para o próximo horário. Depois disso, chame no WhatsApp.
       </p>
     </div>
     <div class="cartao">
@@ -369,7 +423,8 @@
           <div>
             <b class="rot">Endereço</b>
             Rua Sérgio de Carvalho, 28<br>
-            Federação, Salvador, BA
+            Federação, Salvador, BA<br>
+            <span style="color:var(--cinza)">Na galeria ao lado da JP Tintas.</span>
           </div>
         </div>
 
@@ -378,8 +433,8 @@
           <div style="width:100%">
             <b class="rot">Horário de atendimento</b>
             <table class="tabela-horario" id="tabela-horario">
-              <tr data-dia="1"><td>Segunda</td><td>14h às 18h</td></tr>
-              <tr data-dia="2"><td>Terça</td><td>8h às 20h</td></tr>
+              <tr data-dia="1"><td>Segunda</td><td>14h às 20h <small>só Kelson</small></td></tr>
+              <tr data-dia="2"><td>Terça</td><td>8h às 20h <small>Kelson e Júnior</small></td></tr>
               <tr data-dia="3"><td>Quarta</td><td>8h às 20h</td></tr>
               <tr data-dia="4"><td>Quinta</td><td>8h às 20h</td></tr>
               <tr data-dia="5"><td>Sexta</td><td>8h às 20h</td></tr>
@@ -387,7 +442,8 @@
               <tr data-dia="0"><td>Domingo</td><td>8h às 12h</td></tr>
             </table>
             <p style="margin-top:.6rem;font-size:.82rem;color:var(--cinza-fraco)">
-              Almoço de 12h às 13h, de terça a sábado.
+              Almoço de 12h às 13h, de terça a sábado. Feriados: 8h às 17h
+              (nacionais, 8h às 12h). Também atendemos por ordem de chegada.
             </p>
           </div>
         </div>
@@ -396,7 +452,8 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
           <div>
             <b class="rot">Pagamento</b>
-            Pix, dinheiro, cartão de débito e crédito.
+            Pix, dinheiro, cartão de débito e crédito (parcelado com a taxa da maquininha).
+            O sinal do agendamento é pago no Pix, direto ao seu barbeiro.
           </div>
         </div>
 
@@ -430,7 +487,8 @@
         <ul class="rodape-links">
           <li><a href="#equipe">Equipe</a></li>
           <li><a href="#agendar">Agendar horário</a></li>
-          <li><a href="#meu-horario">Consultar ou cancelar</a></li>
+          <li><a href="#planos">Planos</a></li>
+          <li><a href="#meu-horario">Consultar, remarcar ou cancelar</a></li>
           <li><a href="#local">Como chegar</a></li>
         </ul>
       </div>
@@ -445,7 +503,7 @@
     </div>
     <div class="creditos">
       <span>© <span id="ano"></span> Trevus Barbearia</span>
-      <span>Guardamos seu nome e WhatsApp só para organizar a agenda. Para apagar seus dados, é só pedir no WhatsApp.</span>
+      <span>Guardamos seu nome, WhatsApp e e-mail só para organizar a agenda. Para apagar seus dados, é só pedir no WhatsApp.</span>
     </div>
   </div>
 </footer>
@@ -467,6 +525,18 @@
   var hoje = new Date().getDay();
   var linha = document.querySelector('#tabela-horario tr[data-dia="' + hoje + '"]');
   if (linha) linha.setAttribute('data-hoje', '');
+
+  // o botão flutuante some dentro do agendamento: ali ele cobriria os botões do fluxo
+  (function () {
+    var flutua = document.querySelector('.flutua'), sec = document.getElementById('agendar');
+    function confere() {
+      var r = sec.getBoundingClientRect();
+      flutua.hidden = r.top < window.innerHeight && r.bottom > 0;
+    }
+    window.addEventListener('scroll', confere, { passive: true });
+    window.addEventListener('resize', confere);
+    confere();
+  })();
 
   function irAgendar() { document.getElementById('agendar').scrollIntoView({ behavior: 'smooth' }); }
 
@@ -513,6 +583,25 @@
       alvo.appendChild(bloco);
     });
   }
+
+  // planos (assinatura com login entra na Fase 2; por enquanto, WhatsApp)
+  (function () {
+    var alvo = document.getElementById('planos-lista');
+    (CFG.planos || []).forEach(function (pl) {
+      var c = document.createElement('article');
+      c.className = 'plano' + (pl.destaque ? ' destaque' : '');
+      var h = document.createElement('h3'); h.textContent = pl.nome; c.appendChild(h);
+      var v = document.createElement('p'); v.className = 'plano-preco';
+      v.innerHTML = 'R$ ' + (pl.preco_centavos / 100).toFixed(0) + '<small>/mês</small>'; c.appendChild(v);
+      var ul = document.createElement('ul');
+      pl.itens.concat(['Sem sinal para agendar']).forEach(function (i) { var li = document.createElement('li'); li.textContent = i; ul.appendChild(li); });
+      c.appendChild(ul);
+      var a = document.createElement('a'); a.className = 'btn ' + (pl.destaque ? 'btn-ouro' : 'btn-linha'); a.target = '_blank'; a.rel = 'noopener';
+      a.href = 'https://wa.me/' + CFG.whatsapp + '?text=' + encodeURIComponent('Olá, Trevus! Quero assinar o ' + pl.nome + '.');
+      a.textContent = 'Quero o ' + pl.nome; c.appendChild(a);
+      alvo.appendChild(c);
+    });
+  })();
 
   document.addEventListener('tv:dados', function (ev) { pintaCardapio(ev.detail.servicos); });
   if (CFG.servicosCarregados) pintaCardapio(CFG.servicosCarregados);

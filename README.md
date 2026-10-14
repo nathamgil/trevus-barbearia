@@ -1,97 +1,143 @@
-# Trevus Barbearia — site com agendamento
+# Trevus Barbearia — site com agendamento e sinal no Pix
 
 Site + agendamento próprio da Trevus Barbearia (Kelson, Júnior e Hariel),
 Rua Sérgio de Carvalho, 28, Federação, Salvador — BA.
 
-O cliente escolhe o **barbeiro** (ou "sem preferência"), o serviço, o dia e a
-hora, e confirma na hora. Cada sócio tem a própria agenda e as próprias folgas,
-e acompanha tudo em `/admin`. Sem app de terceiro e sem mensalidade de plataforma.
+O cliente escolhe o **barbeiro** (ou "sem preferência"), **um ou mais serviços**,
+o dia e a hora, e paga **50% de sinal** no Pix. O sinal cai na conta
+**InfinitePay do barbeiro** do horário. O horário confirma sozinho quando o Pix
+cai. Os sócios acompanham tudo em `/admin`.
 
 ---
 
 ## Arquivos
 
 ```
-index.html          site público + agendamento em 4 passos
-admin.html          painel dos barbeiros (agenda por sócio, folgas, status)
-assets/config.js    ÚNICO arquivo a editar (chaves, WhatsApp, horários, dados da demo)
-assets/estilo.css   visual (verde + dourado, tirado do escudo da marca)
-assets/agenda.js    motor do agendamento
-db/schema.sql       banco: tabelas, segurança e regras (rodar 1x no Supabase)
-fotos/              imagens do site (tiradas do Instagram da Trevus)
+index.html                         site público + agendamento em 5 passos
+admin.html                         painel dos barbeiros
+assets/config.js                   chaves, WhatsApp, regras, expediente, dados da demo
+assets/estilo.css                  visual (verde + dourado, do escudo da marca)
+assets/agenda.js                   motor do agendamento (site)
+db/schema.sql                      banco: tabelas, segurança e regras (rodar no Supabase)
+supabase/functions/pagamento/      servidor do pagamento: InfinitePay + e-mails
+fotos/                             imagens do site
 ```
+
+## Regras (alinhamento de 24/09/2026)
+
+| regra | valor |
+|---|---|
+| Grade de horários | 30 em 30 min |
+| Agenda aberta | 15 dias |
+| Antecedência mínima | 30 min |
+| Sinal | 50% do total, no Pix, para o barbeiro do horário |
+| Vaga segurada esperando o Pix | 15 min |
+| Cliente cancela | até 1h antes; o sinal vira **crédito com o mesmo barbeiro** |
+| Cliente remarca | até 1h antes, até 2 vezes, com o mesmo barbeiro |
+| Cliente falta | sinal fica com a barbearia (painel: "Não veio") |
+| Barbearia desmarca | painel lista "devolver R$ X"; devolução pelo app da InfinitePay |
+| Sem preferência | vai para quem já tem crédito do cliente, depois para quem está com menos clientes |
+| Feriado | 8h–17h (local) ou 8h–12h (nacional), sem almoço |
+
+Expediente: Ter a Sáb 8h–20h com almoço 12h–13h · Dom 8h–12h ·
+**segunda só o Kelson, 14h–20h** · **terça sem o Hariel**.
+
+> As regras vivem no `db/schema.sql` (quem manda) e se repetem no
+> `assets/config.js` (para a tela e a demo). Mudou uma, mude as duas.
 
 ## Estado atual: MODO DEMONSTRAÇÃO
 
-Com `supabaseUrl` e `supabaseKey` vazios em `assets/config.js`, o site funciona
-inteiro, mas os horários ficam guardados **só no navegador de quem está olhando**.
-A agenda da demo já vem com clientes de exemplo, marcados como "(exemplo)",
-para os sócios verem como fica um dia cheio. O `/admin` abre sem login.
+Com `supabaseUrl` vazio no `config.js`, tudo funciona na tela e fica guardado
+no navegador de quem está olhando. O Pix é **simulado** (botão "Pagar o sinal"
+confirma na hora). A agenda já vem com clientes "(exemplo)".
 
-## Ligando de verdade (uns 20 minutos)
+## Colocando no ar
 
-1. **Criar o banco:** em [supabase.com](https://supabase.com), clique em *New project* e escolha a região
-   **South America (São Paulo)**. Crie **no e-mail da barbearia**, para que a
-   conta e a base de clientes fiquem com eles. O plano grátis dá e sobra.
-2. **Rodar o schema:** abra *SQL Editor*, clique em *New query*, cole o `db/schema.sql` inteiro e clique em *Run*.
-   Já cadastra os 3 barbeiros, os 11 serviços e o expediente.
-3. **Pegar as chaves:** em *Settings*, vá em *API* e copie a **Project URL** e a chave **anon public** para o
-   `assets/config.js`.
-4. **Criar o login de cada sócio:** em *Authentication*, vá em *Users* e clique em *Add user* (3 vezes).
-   Em *Providers*, **desligue "Enable signup"**. Depois ligue cada login ao
-   barbeiro com o `update barbeiros set user_id = ...` que está no fim do schema.
-   Assim cada um abre o painel já na própria agenda.
-5. **Publicar:** faça commit e push, e ative o GitHub Pages na branch `main`.
+### 1. Contas que a Trevus cria (no e-mail trevusbarbearia77@gmail.com)
+- **Supabase** (supabase.com), região South America (São Paulo), plano grátis.
+- **Brevo** (brevo.com), plano grátis com 300 e-mails/dia. Verificar o e-mail remetente.
+- **InfinitePay, uma por sócio**, no CPF de cada um. Em cada app: *Vendas >
+  Checkout > Configurações* > ativar o Checkout Integrado. Anotar a
+  **InfiniteTag** de cada um (o `$nome`, sem o `$`).
+
+### 2. Banco
+1. Supabase > *SQL Editor* > cole o `db/schema.sql` inteiro > *Run*.
+2. *Authentication > Users > Add user* para os 3 sócios. Em *Providers*,
+   **desligue "Enable signup"**.
+3. No SQL Editor, rode os `update barbeiros ...` do fim do schema (liga o login
+   de cada um e cadastra a InfiniteTag de cada um).
+
+### 3. Servidor do pagamento
+```bash
+npx supabase login
+npx supabase link --project-ref <ref-do-projeto>
+npx supabase functions deploy pagamento --no-verify-jwt
+npx supabase secrets set SITE_URL=https://trevusbarbearia.com.br BREVO_API_KEY=... EMAIL_REMETENTE=... EMAIL_BARBEARIA=trevusbarbearia77@gmail.com CRON_SECRET=<senha-longa>
+```
+
+Lembrete da véspera (todo dia às 18h de Salvador = 21h UTC). No SQL Editor:
+```sql
+create extension if not exists pg_cron; create extension if not exists pg_net;
+select cron.schedule('lembretes-trevus', '0 21 * * *', $$
+  select net.http_post(
+    url := 'https://<ref>.supabase.co/functions/v1/pagamento?acao=lembretes',
+    headers := '{"Content-Type":"application/json","x-cron-secret":"<senha-longa>"}'::jsonb,
+    body := '{}'::jsonb)
+$$);
+```
+
+### 4. Site
+Cole a *Project URL* e a chave *anon public* em `assets/config.js`, faça o commit
+e o push. Com o domínio próprio, aponte o DNS para o GitHub Pages e crie o
+arquivo `CNAME`.
+
+### 5. Teste antes de anunciar
+Um agendamento de verdade com cada barbeiro, com um serviço barato, para confirmar
+que o Pix cai na conta certa, que o horário confirma sozinho e que os dois
+e-mails chegam. Depois, desmarque pelo painel e devolva pelo app.
 
 ## Custos para a barbearia
 
-| Item | Custo |
+| item | custo |
 |---|---|
 | Hospedagem (GitHub Pages) | R$ 0 |
-| Banco da agenda (Supabase Free) | R$ 0 |
-| Domínio próprio (.com.br, Registro.br) | opcional, R$ 40/ano |
+| Banco + servidor (Supabase Free) | R$ 0 |
+| E-mails (Brevo Free, 300/dia) | R$ 0 |
+| Sinal no Pix (InfinitePay) | taxa da InfinitePay por venda (conferir no app de cada um) |
+| Domínio .com.br | R$ 40/ano |
 
-O plano grátis do Supabase pausa o projeto depois de **7 dias sem nenhum
-acesso**. Com agendamento todo dia isso não acontece. Se a casa fechar por férias
-longas, basta entrar no painel do Supabase e clicar em *Restore*.
+O Supabase grátis pausa depois de 7 dias **sem nenhum acesso**. Com agendamento
+diário isso não acontece.
 
-## Regras da agenda
+## Segurança
 
-| regra | valor | onde muda |
-|---|---|---|
-| Grade de horários | 10 em 10 min | `slots_barbeiro` |
-| Antecedência mínima | 30 min | `slots_barbeiro` |
-| Janela de agendamento | 30 dias | `slots_barbeiro` |
-| Cancelamento pelo cliente | até 2h antes | `cancelar_agendamento` |
-| Máx. horários futuros por telefone | 3 | `criar_agendamento` |
-| "Sem preferência" | vai para o barbeiro livre com menos clientes no dia | `criar_agendamento` |
+- A chave `anon` é pública. Quem protege é o RLS + as funções do schema.
+- O visitante não lê agendamentos, créditos nem a InfiniteTag. Ele só chama funções:
+  ver horários, marcar, acompanhar o pagamento, consultar, cancelar e remarcar
+  o próprio horário (código **e** telefone).
+- **Só o servidor confirma pagamento** (`registrar_pagamento` é exclusivo da
+  chave de serviço), e só depois de perguntar à InfinitePay (`payment_check`).
+  Um webhook falso não confirma nada.
+- Dois clientes no mesmo horário com o mesmo barbeiro: o banco recusa
+  (constraint de exclusão), inclusive enquanto um deles está pagando.
 
-Expediente: Dom 8–12 · Seg 14–18 · Ter a Sáb 8–20, com almoço das 12 às 13.
+## Testes
 
-> Mudou uma regra? Mude nos **dois** lugares (`config.js` e `db/schema.sql`).
-> Quem manda de verdade é o banco. O site é só a vitrine.
+O schema foi testado num Postgres real (PGlite) com 36 cenários: agenda por
+barbeiro, almoço, feriado, sinal, crédito, remarcação, Pix vencido e
+permissões. A função de pagamento foi testada com a InfinitePay, o banco e o
+Brevo simulados (14 cenários, incluindo webhook falso).
 
-## Segurança e privacidade
+## Pendências da Trevus
 
-- A chave `anon` aparece no código do site. Isso é normal: quem protege os dados
-  é o **RLS** + as funções do `schema.sql`.
-- O visitante **não lê a tabela de agendamentos**. Ele só chama funções: ver
-  horários, marcar, e consultar ou cancelar o próprio horário (exige código **e** telefone).
-- Dois clientes no mesmo horário com o mesmo barbeiro: o banco recusa o segundo
-  (constraint de exclusão por barbeiro). Não depende do JavaScript.
-- LGPD: guarda-se só nome + WhatsApp, com finalidade declarada no rodapé.
+- Preço das **luzes** e da **remoção de pelos nasais** (já cadastrados, desligados)
+- O que o **Hyper Trevus** inclui (`config.js > planos`)
+- Bairro: Federação ou Vasco da Gama
+- Corte infantil a R$ 35 (mais caro que o adulto): confirmar
+- Regra dos **10% de desconto** quando o barbeiro desmarca em cima da hora ou falta
+- Fotos dos cortes, fotos individuais e logo em PNG
 
-## Rodando local
+## Fase 2
 
-```bash
-python -m http.server 5520
-```
-
-Depois abra `http://localhost:5520`.
-
-## Ficou de fora de propósito
-
-- Lembrete automático no WhatsApp na véspera (exige API paga da Meta)
-- Pagamento ou sinal antecipado
-- Lançar no painel o cliente que chegou por ordem de chegada
-- Galeria de cortes (esperando fotos dos trabalhos)
+Login do cliente, planos de assinatura (sem sinal para assinante), importar
+clientes do MinhaAgenda.

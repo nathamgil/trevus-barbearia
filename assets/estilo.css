@@ -181,7 +181,7 @@ h3{font-size:1.1rem;letter-spacing:.04em}
   padding:clamp(1.1rem,3.5vw,2.2rem);margin-top:2.2rem;
   box-shadow:0 30px 80px -40px rgba(0,0,0,.8);
 }
-.passos{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:1.4rem}
+.passos{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:1.4rem}
 .passo{
   padding:.5rem 0 .2rem;border-top:3px solid var(--borda);
   font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cinza-fraco);font-weight:800;
@@ -189,7 +189,7 @@ h3{font-size:1.1rem;letter-spacing:.04em}
 }
 .passo[data-estado="atual"]{border-color:var(--ouro);color:var(--ouro)}
 .passo[data-estado="feito"]{border-color:var(--ouro-fundo);color:var(--cinza)}
-@media(max-width:520px){ .passo{font-size:.7rem;letter-spacing:.02em} }
+@media(max-width:520px){ .passo{font-size:.66rem;letter-spacing:0} }
 
 .escolhas{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.4rem}
 .escolha{
@@ -410,3 +410,51 @@ h3{font-size:1.1rem;letter-spacing:.04em}
   .topo,.flutua,.acoes,.faixa-demo{display:none}
   body{background:#fff;color:#000}
 }
+
+/* ---------- v2: equipe, vários serviços, sinal, planos ---------- */
+.membro-info blockquote{margin:-.6rem 0 1rem;font-size:.92rem;color:#E4ECE6;font-style:italic;max-width:30ch}
+.membro-acoes .btn-linha{font-size:.8rem}
+
+.opcao-multi{justify-content:flex-start}
+.opcao-multi > span:nth-child(2){flex:1}
+.caixinha{width:22px;height:22px;border-radius:6px;border:2px solid var(--borda);flex:none;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.opcao-multi[aria-pressed="true"] .caixinha{background:var(--ouro);border-color:var(--ouro)}
+.opcao-multi[aria-pressed="true"] .caixinha::after{content:"";width:6px;height:11px;border:solid #1B1405;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.barra-servicos{
+  position:sticky;bottom:12px;z-index:5;margin-top:1.2rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  background:var(--musgo);border:1px solid var(--ouro-fundo);border-radius:16px;padding:.8rem 1rem;
+  box-shadow:0 18px 40px -18px #000;
+}
+.barra-servicos #bs-txt{display:block;font-size:.8rem;color:var(--cinza)}
+.barra-servicos b{font-family:var(--display);font-size:1.3rem;color:var(--ouro-claro)}
+
+.pagamento{display:grid;gap:1rem}
+.pg-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.pg-rot{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cinza);font-weight:800}
+.pg-valor{font-family:var(--display);font-size:clamp(2.2rem,7vw,3rem);color:var(--ouro-claro);line-height:1.1}
+.pg-resto{color:var(--cinza);font-size:.92rem}
+.pg-tempo{text-align:right;background:var(--mata);border:1px solid var(--borda);border-radius:14px;padding:.6rem 1rem}
+.pg-tempo span{display:block;font-size:.72rem;color:var(--cinza);font-weight:700}
+.pg-tempo b{font-family:var(--display);font-size:1.7rem;font-variant-numeric:tabular-nums}
+.pg-linha{font-weight:700}
+.pg-demo{display:flex;gap:1rem;align-items:center;background:var(--mata);border:1px dashed var(--ouro-fundo);border-radius:14px;padding:1rem}
+.pg-demo svg{width:96px;height:96px;flex:none;color:var(--creme);background:#fff;color:#07100C;border-radius:8px;padding:6px}
+.pg-demo p{font-size:.88rem;color:var(--cinza)}
+.pg-regras{font-size:.82rem;color:var(--cinza-fraco)}
+.ok-sinal{color:var(--ouro-claro);font-weight:700;margin-bottom:1rem}
+
+.planos{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem}
+@media(max-width:860px){ .planos{grid-template-columns:1fr} }
+.plano{background:var(--mata);border:1px solid var(--borda);border-radius:20px;padding:1.5rem;display:flex;flex-direction:column;gap:.8rem}
+.plano.destaque{border-color:var(--ouro);background:linear-gradient(170deg,rgba(215,174,79,.12),var(--mata) 55%)}
+.plano h3{font-size:1.3rem}
+.plano-preco{font-family:var(--display);font-size:2.2rem;color:var(--ouro-claro);line-height:1}
+.plano-preco small{font-family:var(--corpo);font-size:.9rem;color:var(--cinza);margin-left:.2rem}
+.plano ul{list-style:none;display:grid;gap:.4rem;flex:1;color:var(--cinza)}
+.plano li::before{content:"✓ ";color:var(--ouro);font-weight:800}
+
+.tabela-horario small{display:block;font-weight:600;color:var(--cinza-fraco);font-size:.74rem}
+.remarcar{display:grid;gap:.6rem;margin-top:1rem}
+.remarcar h3{font-size:1.05rem}
+.remarcar .dica{font-size:.86rem;color:var(--cinza)}
