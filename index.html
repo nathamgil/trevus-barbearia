@@ -88,9 +88,9 @@
     </div>
     <div class="capa-rostos">
       <div class="pilha">
-        <img src="fotos/kelson.jpg" alt="Kelson" width="42" height="42">
-        <img src="fotos/junior.jpg" alt="Júnior" width="42" height="42">
-        <img src="fotos/hariel.jpg" alt="Hariel" width="42" height="42">
+        <img src="fotos/perfil-kelson.jpg" alt="Kelson" width="42" height="42">
+        <img src="fotos/perfil-junior.jpg" alt="Júnior" width="42" height="42">
+        <img src="fotos/perfil-hariel.jpg" alt="Hariel" width="42" height="42">
       </div>
       <span><b>Kelson, Júnior e Hariel</b><br>os sócios que cortam o seu cabelo</span>
     </div>
@@ -122,41 +122,60 @@
     </p>
     <div class="equipe" id="equipe-lista">
       <article class="membro">
-        <img src="fotos/kelson.jpg" alt="Kelson, barbeiro e sócio da Trevus, de camisa preta em frente à parede de folhagem." width="800" height="1000">
+        <img src="fotos/perfil-kelson.jpg" alt="Kelson, barbeiro e sócio da Trevus, de camisa preta em frente à parede de folhagem." width="800" height="1000">
         <div class="membro-info">
           <h3>Kelson</h3>
           <p>Cortes na tesoura · 4 anos</p>
           <blockquote>“Cortes que comunicam poder.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="kelson">Agendar com Kelson</button>
+            <a class="btn btn-linha" href="#trabalhos" data-ver-trabalhos="kelson">Ver trabalhos</a>
             <a class="btn btn-linha" href="https://www.instagram.com/kelsonstrevus/" target="_blank" rel="noopener" aria-label="Instagram do Kelson">@kelsonstrevus</a>
           </div>
         </div>
       </article>
       <article class="membro">
-        <img src="fotos/junior.jpg" alt="Júnior, barbeiro e sócio da Trevus, de braços cruzados apoiado na cadeira." width="800" height="1000">
+        <img src="fotos/perfil-junior.jpg" alt="Júnior, barbeiro e sócio da Trevus, de braços cruzados apoiado na cadeira." width="800" height="1000">
         <div class="membro-info">
           <h3>Júnior</h3>
           <p>Química e platinado · 10 anos</p>
           <blockquote>“Autoestima renovada em cada atendimento.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="junior">Agendar com Júnior</button>
+            <a class="btn btn-linha" href="#trabalhos" data-ver-trabalhos="junior">Ver trabalhos</a>
             <a class="btn btn-linha" href="https://www.instagram.com/juniortrevus/" target="_blank" rel="noopener" aria-label="Instagram do Júnior">@juniortrevus</a></div>
         </div>
       </article>
       <article class="membro">
-        <img src="fotos/hariel.jpg" alt="Hariel, barbeiro e sócio da Trevus, de óculos, apoiado na cadeira do salão." width="800" height="1000">
+        <img src="fotos/perfil-hariel.jpg" alt="Hariel, barbeiro e sócio da Trevus, de óculos, apoiado na cadeira do salão." width="800" height="1000">
         <div class="membro-info">
           <h3>Hariel</h3>
           <p>Degradê · 13 anos</p>
           <blockquote>“Experiência que transforma técnica em excelência.”</blockquote>
           <div class="membro-acoes">
             <button class="btn btn-ouro" type="button" data-agendar-com="hariel">Agendar com Hariel</button>
+            <a class="btn btn-linha" href="#trabalhos" data-ver-trabalhos="hariel">Ver trabalhos</a>
             <a class="btn btn-linha" href="https://www.instagram.com/haridade1996/" target="_blank" rel="noopener" aria-label="Instagram do Hariel">@haridade1996</a>
           </div>
         </div>
       </article>
     </div>
+  </div>
+</section>
+
+<!-- ================= TRABALHOS ================= -->
+<section class="secao" id="trabalhos" style="padding-top:0">
+  <div class="wrap">
+    <p class="olho">Trabalhos</p>
+    <h2>Saiu da cadeira assim</h2>
+    <p class="sub">Cortes feitos na Trevus. Filtre pelo barbeiro para ver o estilo de cada um.</p>
+    <div class="filtro-trab" id="filtro-trab" role="group" aria-label="Filtrar por barbeiro">
+      <button type="button" data-f="" aria-pressed="true">Todos</button>
+      <button type="button" data-f="kelson" aria-pressed="false">Kelson</button>
+      <button type="button" data-f="junior" aria-pressed="false">Júnior</button>
+      <button type="button" data-f="hariel" aria-pressed="false">Hariel</button>
+    </div>
+    <div class="trabalhos" id="trabalhos-lista"></div>
   </div>
 </section>
 
@@ -424,7 +443,7 @@
             <b class="rot">Endereço</b>
             Rua Sérgio de Carvalho, 28<br>
             Federação, Salvador, BA<br>
-            <span style="color:var(--cinza)">Na galeria ao lado da JP Tintas.</span>
+            <span style="color:var(--cinza)">Na galeria ao lado da JP Tintas. A rua tem vagas para estacionar.</span>
           </div>
         </div>
 
@@ -601,6 +620,48 @@
       a.textContent = 'Quero o ' + pl.nome; c.appendChild(a);
       alvo.appendChild(c);
     });
+  })();
+
+  // trabalhos de cada barbeiro, com filtro
+  (function () {
+    var alvo = document.getElementById('trabalhos-lista');
+    var nomes = { kelson: 'Kelson', junior: 'Júnior', hariel: 'Hariel' };
+    function pinta(f) {
+      alvo.innerHTML = '';
+      (CFG.trabalhos || []).filter(function (t) { return !f || t.barbeiro === f; }).forEach(function (t) {
+        var fig = document.createElement('figure');
+        if (t.video) {
+          var v = document.createElement('video');
+          v.src = t.video; v.poster = t.foto; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+          v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata';
+          v.setAttribute('aria-label', t.legenda + ' por ' + nomes[t.barbeiro]);
+          fig.appendChild(v);
+        } else {
+          var im = document.createElement('img');
+          im.src = t.foto; im.loading = 'lazy'; im.alt = t.legenda + ' feito por ' + nomes[t.barbeiro] + ' na Trevus';
+          fig.appendChild(im);
+        }
+        var cap = document.createElement('figcaption');
+        cap.innerHTML = '<b></b><span></span>';
+        cap.querySelector('b').textContent = t.legenda;
+        cap.querySelector('span').textContent = 'por ' + nomes[t.barbeiro];
+        fig.appendChild(cap);
+        alvo.appendChild(fig);
+      });
+    }
+    function filtra(f) {
+      Array.prototype.forEach.call(document.querySelectorAll('#filtro-trab button'), function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-f') === f ? 'true' : 'false');
+      });
+      pinta(f);
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#filtro-trab button'), function (b) {
+      b.addEventListener('click', function () { filtra(b.getAttribute('data-f')); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ver-trabalhos]'), function (a) {
+      a.addEventListener('click', function () { filtra(a.getAttribute('data-ver-trabalhos')); });
+    });
+    pinta('');
   })();
 
   document.addEventListener('tv:dados', function (ev) { pintaCardapio(ev.detail.servicos); });

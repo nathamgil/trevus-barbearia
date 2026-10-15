@@ -245,13 +245,13 @@
 
   function normalizaDemo(a){
     return { id:a.id||a.codigo, codigo:a.codigo, barbeiro_id:a.barbeiro_id, barbeiro:a.barbeiro, servico:a.servico,
-      preco:a.preco_centavos, sinal:a.sinal_centavos||0, sinal_status:a.sinal_status||'isento', origem:a.origem||'site',
+      preco:a.preco_centavos, sinal:a.sinal_centavos||0, credito_usado:a.credito_usado||0, sinal_status:a.sinal_status||'isento', origem:a.origem||'site',
       nome:a.nome, telefone:a.telefone, email:a.email, dia:a.dia, inicio:a.inicio, fim:a.fim, obs:a.obs,
       status:a.status, expira_em:a.expira_em, pagamento:a.pagamento||null };
   }
   function normalizaReal(a){
     return { id:a.id, codigo:a.codigo, barbeiro_id:a.barbeiro_id, barbeiro:a.barbeiro_nome, servico:a.servico_nome,
-      preco:a.preco_centavos, sinal:a.sinal_centavos, sinal_status:a.sinal_status, origem:a.origem,
+      preco:a.preco_centavos, sinal:a.sinal_centavos, credito_usado:a.credito_usado||0, sinal_status:a.sinal_status, origem:a.origem,
       nome:a.cliente_nome, telefone:a.cliente_telefone, email:a.cliente_email, dia:a.data,
       inicio:hhmm(a.inicio), fim:hhmm(a.fim), obs:a.observacao, status:a.status, expira_em:a.expira_em, pagamento:a.pagamento };
   }
@@ -293,6 +293,26 @@
         gravar(K_AG, l); return Promise.resolve();
       }
       return sb.from('agendamentos').update(campos).eq('id', a.id).then(resp);
+    },
+    // a regra (devolver sinal, crédito, 10% em cima da hora) mora no banco
+    desmarcar: function (a) {
+      if (!DEMO) return sb.rpc('desmarcar_pela_barbearia', { p_id: a.id }).then(resp);
+      var l = ler(K_AG, []), res = 'DESMARCADO';
+      l.forEach(function (x) {
+        if (x.codigo !== a.codigo || x.status !== 'confirmado') return;
+        var tarde = deIso(x.dia).getTime() + minutos(x.inicio) * 60000 < Date.now() + 3600000;
+        if ((x.sinal_status === 'pago' || x.sinal_status === 'credito') && x.credito_usado > 0) {
+          var cr = ler('tv2_creditos_demo', []); cr.push({ telefone: x.telefone, barbeiro_id: x.barbeiro_id, saldo: x.credito_usado }); gravar('tv2_creditos_demo', cr);
+        }
+        x.sinal_status = x.sinal_status === 'pago' ? 'devolver' : (x.sinal_status === 'credito' ? 'virou_credito' : x.sinal_status);
+        x.status = 'cancelado';
+        if (tarde && (x.origem || 'site') === 'site') {
+          var ds = ler('tv2_descontos_demo', []); ds.push({ telefone: x.telefone, pct: 10 }); gravar('tv2_descontos_demo', ds);
+          res = 'DESMARCADO_COM_DESCONTO';
+        }
+      });
+      gravar(K_AG, l);
+      return Promise.resolve(res);
     },
     lancarBalcao: function (b) {
       var codigo = Math.random().toString(16).slice(2,8).toUpperCase();
@@ -460,7 +480,7 @@
       pendente: ['tag-pend', 'Aguardando Pix'],
       virou_credito: ['tag-fim', 'Sinal virou crédito'],
       retido: ['tag-fim', 'Sinal retido'],
-      devolver: ['tag-off', 'Devolver ' + dinheiro(a.sinal)],
+      devolver: ['tag-off', 'Devolver ' + dinheiro(a.sinal - (a.credito_usado || 0))],
       devolvido: ['tag-fim', 'Sinal devolvido'],
       isento: ['tag-fim', 'Sem sinal']
     })[a.sinal_status] || ['tag-fim', a.sinal_status];
@@ -509,12 +529,13 @@
           function(){ aplica(pago ? { status: 'faltou', sinal_status: 'retido' } : { status: 'faltou' }); });
       });
       botao('Desmarcar', function(){
-        confirmar(corpo, a.sinal_status === 'pago'
-            ? 'A barbearia vai desmarcar ' + a.nome + '. O sinal de ' + dinheiro(a.sinal) + ' entra na lista para devolver pelo app da InfinitePay.'
-            : 'Desmarcar o horário de ' + a.nome + '?', 'Desmarcar',
-          function(){ aplica(a.sinal_status === 'pago'
-            ? { status: 'cancelado', sinal_status: 'devolver', cancelado_em: new Date().toISOString() }
-            : { status: 'cancelado', cancelado_em: new Date().toISOString() }); });
+        var tarde = deIso(a.dia).getTime() + minutos(a.inicio) * 60000 < Date.now() + 3600000;
+        var txt = 'A barbearia vai desmarcar ' + a.nome + '.';
+        if (a.sinal_status === 'pago') txt += ' O sinal de ' + dinheiro(a.sinal - (a.credito_usado || 0)) + ' entra na lista para devolver pelo app da InfinitePay.';
+        if (tarde && a.origem !== 'balcao') txt += ' Como falta menos de 1h, o cliente ganha 10% de desconto no próximo horário.';
+        confirmar(corpo, txt, 'Desmarcar', function(){
+          DADOS.desmarcar(a).then(recarrega).catch(function(e){ aviso(corpo, 'aviso-erro', e.message || 'Não consegui desmarcar.'); });
+        });
       });
     } else if (a.sinal_status === 'devolver') {
       var b = botao('Já devolvi', function(){ aplica({ sinal_status: 'devolvido' }); });

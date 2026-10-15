@@ -51,6 +51,9 @@
   function somaPreco(lista) { return lista.reduce(function (t, s) { return t + s.preco_centavos; }, 0); }
   function nomes(lista) { return lista.map(function (s) { return s.nome; }).join(' + '); }
   function sinalDe(total) { return Math.ceil(total * R.sinalPct / 100); }
+  // freestyle, por exemplo, só o Kelson faz (so_barbeiros = lista de ids; vazio = todos)
+  function faz(servico, barbeiroId) { return !servico.so_barbeiros || servico.so_barbeiros.indexOf(barbeiroId) >= 0; }
+  function fazTodos(lista, barbeiroId) { return lista.every(function (s) { return faz(s, barbeiroId); }); }
   function ler(k, padrao) { try { return JSON.parse(localStorage.getItem(k) || 'null') || padrao; } catch (e) { return padrao; } }
   function gravar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
@@ -127,8 +130,9 @@
     }
     return livres;
   }
-  function demoSlots(dataIso, dur, barbeiroId) {
-    var ids = barbeiroId ? [barbeiroId] : CFG.barbeirosDemo.map(function (b) { return b.id; });
+  function demoSlots(dataIso, dur, barbeiroId, servicos) {
+    var ids = (barbeiroId ? [barbeiroId] : CFG.barbeirosDemo.map(function (b) { return b.id; }))
+      .filter(function (id) { return !servicos || fazTodos(servicos, id); });
     var todos = {};
     ids.forEach(function (id) { demoSlotsBarbeiro(dataIso, dur, id).forEach(function (h) { todos[h] = true; }); });
     return Object.keys(todos).sort();
@@ -187,16 +191,24 @@
         var out = [], hoje = new Date(), dur = somaDur(servicos);
         for (var i = 0; i <= R.janelaDias; i++) {
           var d = iso(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + i));
-          out.push({ dia: d, vagas: demoSlots(d, dur, barbeiro && barbeiro.id).length });
+          out.push({ dia: d, vagas: demoSlots(d, dur, barbeiro && barbeiro.id, servicos).length });
         }
         return Promise.resolve(out);
       }
       return rpc('dias_disponiveis', { p_servicos: servicos.map(function (s) { return s.id; }), p_barbeiro_id: barbeiro ? barbeiro.id : null });
     },
     slots: function (dataIso, servicos, barbeiro) {
-      if (DEMO) return Promise.resolve(demoSlots(dataIso, somaDur(servicos), barbeiro && barbeiro.id));
+      if (DEMO) return Promise.resolve(demoSlots(dataIso, somaDur(servicos), barbeiro && barbeiro.id, servicos));
       return rpc('slots_disponiveis', { p_data: dataIso, p_servicos: servicos.map(function (s) { return s.id; }), p_barbeiro_id: barbeiro ? barbeiro.id : null })
         .then(function (l) { return l.map(hhmm); });
+    },
+    desconto: function (tel) {
+      if (soDigitos(tel).length < 10) return Promise.resolve(0);
+      if (DEMO) {
+        var d = ler('tv2_descontos_demo', []).filter(function (x) { return x.telefone === soDigitos(tel) && !x.usado; })[0];
+        return Promise.resolve(d ? d.pct : 0);
+      }
+      return rpc('meu_desconto', { p_telefone: soDigitos(tel) }).then(function (p) { return p || 0; });
     },
     creditos: function (tel) {
       if (soDigitos(tel).length < 10) return Promise.resolve({});
@@ -210,7 +222,7 @@
       if (DEMO) {
         var dur = somaDur(d.servicos), tel = soDigitos(d.telefone), cred = demoCreditos(tel), ag0 = demoAg();
         var candidatos = (d.barbeiro ? [d.barbeiro] : CFG.barbeirosDemo.slice())
-          .filter(function (b) { return demoSlotsBarbeiro(d.dia, dur, b.id).indexOf(d.hora) >= 0; })
+          .filter(function (b) { return fazTodos(d.servicos, b.id) && demoSlotsBarbeiro(d.dia, dur, b.id).indexOf(d.hora) >= 0; })
           .sort(function (a, b) {
             function carga(x) { return ag0.filter(function (y) { return y.barbeiro_id === x.id && y.dia === d.dia && y.status === 'confirmado'; }).length; }
             return ((cred[b.id] || 0) - (cred[a.id] || 0)) || (carga(a) - carga(b));
@@ -218,7 +230,10 @@
         var b = candidatos[0];
         if (!b) return Promise.reject(new Error('Esse horário acabou de ser ocupado. Escolha outro.'));
 
-        var total = somaPreco(d.servicos), sinal = sinalDe(total), resta = sinal, usado = 0;
+        var descontos = ler('tv2_descontos_demo', []), desc = descontos.filter(function (x) { return x.telefone === tel && !x.usado; })[0];
+        var total = somaPreco(d.servicos);
+        if (desc) { total = Math.round(total * (100 - desc.pct) / 100); desc.usado = true; gravar('tv2_descontos_demo', descontos); }
+        var sinal = sinalDe(total), resta = sinal, usado = 0;
         var creditos = demoCr();
         creditos.forEach(function (c) {
           if (resta && c.telefone === tel && c.barbeiro_id === b.id && c.saldo > 0) {
@@ -231,7 +246,7 @@
           codigo: Math.random().toString(16).slice(2, 8).toUpperCase(),
           barbeiro_id: b.id, barbeiro: b.nome, servicos: d.servicos.map(function (s) { return s.id; }),
           servico: nomes(d.servicos), preco_centavos: total, duracao_min: dur,
-          sinal_centavos: sinal, credito_usado: usado, sinal_status: resta ? 'pendente' : 'credito',
+          sinal_centavos: sinal, credito_usado: usado, desconto_pct: desc ? desc.pct : 0, sinal_status: resta ? 'pendente' : 'credito',
           nome: d.nome, telefone: tel, email: d.email, dia: d.dia, inicio: d.hora,
           fim: deMinutos(minutos(d.hora) + dur), obs: d.obs || '',
           status: resta ? 'aguardando_pagamento' : 'confirmado',
@@ -429,9 +444,13 @@
       txt.appendChild(el('strong', null, qualquer ? 'Sem preferência' : b.nome));
       txt.appendChild(el('span', null, qualquer ? 'Primeiro barbeiro livre' : (b.especialidade || 'Sócio · Barbeiro')));
       btn.appendChild(txt);
+      if (!qualquer && estado.escolhidos.length && !fazTodos(estado.escolhidos, b.id)) {
+        btn.disabled = true; btn.title = 'Não faz um dos serviços escolhidos';
+      }
       btn.addEventListener('click', function () {
         estado.barbeiro = b; estado.dia = null; estado.hora = null;
-        pintaBarbeiros();
+        if (!qualquer) estado.escolhidos = estado.escolhidos.filter(function (s) { return faz(s, b.id); });
+        pintaBarbeiros(); pintaServicos();
         if (estado.escolhidos.length) { carregaDias(); irPara(3); } else irPara(2);
       });
       listaBarbeiros.appendChild(btn);
@@ -445,7 +464,9 @@
   function pintaServicos() {
     listaServicos.innerHTML = '';
     var grupos = {};
-    estado.servicos.forEach(function (s) { (grupos[s.categoria || 'Serviços'] = grupos[s.categoria || 'Serviços'] || []).push(s); });
+    var bid = barbeiroEscolhido() && barbeiroEscolhido().id;
+    estado.servicos.filter(function (s) { return !bid || faz(s, bid); })
+      .forEach(function (s) { (grupos[s.categoria || 'Serviços'] = grupos[s.categoria || 'Serviços'] || []).push(s); });
     Object.keys(grupos).forEach(function (g) {
       listaServicos.appendChild(el('div', 'grupo-servico', g));
       var grade = el('div', 'lista-escolha');
@@ -455,12 +476,16 @@
         b.setAttribute('aria-pressed', marcado ? 'true' : 'false');
         var esq = el('span');
         esq.appendChild(el('strong', null, s.nome));
-        esq.appendChild(el('span', null, duracao(s.duracao_min)));
+        var so = s.so_barbeiros && estado.barbeiros.filter(function (x) { return s.so_barbeiros.indexOf(x.id) >= 0; })
+          .map(function (x) { return x.nome; }).join(' e ');
+        esq.appendChild(el('span', null, duracao(s.duracao_min) + (so && !bid ? ' · só com ' + so : '')));
         b.appendChild(el('span', 'caixinha'));
         b.appendChild(esq);
         b.appendChild(el('span', 'val', (s.a_partir_de ? 'a partir de ' : '') + dinheiro(s.preco_centavos)));
         b.addEventListener('click', function () {
           estado.escolhidos = marcado ? estado.escolhidos.filter(function (x) { return x.id !== s.id; }) : estado.escolhidos.concat([s]);
+          // mantém a ordem do cardápio ("Corte + Freestyle", não a ordem dos cliques)
+          estado.escolhidos.sort(function (x, y) { return estado.servicos.indexOf(x) - estado.servicos.indexOf(y); });
           estado.dia = null; estado.hora = null;
           pintaServicos();
         });
@@ -561,7 +586,8 @@
   var campoTel = $('#cli-tel', raiz);
 
   function montaResumo() {
-    var total = somaPreco(estado.escolhidos), sinal = sinalDe(total);
+    var cheio = somaPreco(estado.escolhidos);
+    var total = estado.desconto ? Math.round(cheio * (100 - estado.desconto) / 100) : cheio, sinal = sinalDe(total);
     var bid = barbeiroEscolhido() && barbeiroEscolhido().id;
     var cred = bid ? (estado.creditos[bid] || 0) : 0;
     var aPagar = Math.max(0, sinal - cred);
@@ -572,7 +598,8 @@
       ['Barbeiro', estado.barbeiro === 'qualquer' ? 'O primeiro livre nesse horário' : estado.barbeiro.nome],
       ['Serviço', nomes(estado.escolhidos)],
       ['Quando', dataPorExtenso(estado.dia) + ', ' + estado.hora + ' às ' + deMinutos(minutos(estado.hora) + somaDur(estado.escolhidos))],
-      ['Total', (aPartir ? 'a partir de ' : '') + dinheiro(total)],
+      estado.desconto ? ['Desconto', estado.desconto + '% (a barbearia desmarcou seu último horário em cima da hora)'] : null,
+      ['Total', (aPartir ? 'a partir de ' : '') + dinheiro(total) + (estado.desconto ? ' (era ' + dinheiro(cheio) + ')' : '')],
       cred ? ['Seu crédito', '− ' + dinheiro(Math.min(cred, sinal))] : null,
       ['Sinal agora', aPagar ? dinheiro(aPagar) + ' no Pix' : 'coberto pelo seu crédito'],
       ['Na barbearia', dinheiro(total - sinal) + (aPartir ? ' (pode variar)' : '')]
@@ -594,7 +621,9 @@
   campoTel.addEventListener('input', mascaraTel);
   // o crédito depende do WhatsApp: reconsulta ao abrir o resumo e ao terminar de digitar
   function atualizaCredito() {
-    API.creditos(campoTel.value).then(function (c) { estado.creditos = c; if (estado.etapa === 4) montaResumo(); });
+    Promise.all([API.creditos(campoTel.value), API.desconto(campoTel.value)]).then(function (r) {
+      estado.creditos = r[0]; estado.desconto = r[1]; if (estado.etapa === 4) montaResumo();
+    });
   }
   campoTel.addEventListener('input', function () { if (soDigitos(campoTel.value).length === 11) atualizaCredito(); });
 

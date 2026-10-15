@@ -18,7 +18,8 @@ window.TV = {
 
   endereco: {
     linha1: 'Rua Sérgio de Carvalho, 28',
-    linha2: 'Federação, Salvador — BA',          // PENDENTE: confirmar Federação x Vasco da Gama
+    linha2: 'Federação, Salvador — BA',
+    estacionamento: 'A rua tem vagas para estacionar.',
     referencia: 'Na galeria ao lado da JP Tintas.',
     maps:   'https://maps.app.goo.gl/bP7qy1qc5hcHm5Vj6',
     busca:  'Trevus Barbearia, Rua Sérgio de Carvalho, 28, Salvador - BA'
@@ -76,11 +77,11 @@ window.TV = {
      No ar de verdade, barbeiros, serviços e planos vêm do banco.
   ------------------------------------------------------------------ */
   barbeirosDemo: [
-    { id:'kelson', slug:'kelson', nome:'Kelson', foto:'fotos/kelson.jpg', instagram:'kelsonstrevus',
+    { id:'kelson', slug:'kelson', nome:'Kelson', foto:'fotos/perfil-kelson.jpg', instagram:'kelsonstrevus',
       especialidade:'Cortes na tesoura', anos_profissao:4,  frase:'Cortes que comunicam poder.' },
-    { id:'junior', slug:'junior', nome:'Júnior', foto:'fotos/junior.jpg', instagram:'juniortrevus',
+    { id:'junior', slug:'junior', nome:'Júnior', foto:'fotos/perfil-junior.jpg', instagram:'juniortrevus',
       especialidade:'Química e platinado', anos_profissao:10, frase:'Autoestima renovada em cada atendimento.' },
-    { id:'hariel', slug:'hariel', nome:'Hariel', foto:'fotos/hariel.jpg', instagram:'haridade1996',
+    { id:'hariel', slug:'hariel', nome:'Hariel', foto:'fotos/perfil-hariel.jpg', instagram:'haridade1996',
       especialidade:'Degradê', anos_profissao:13, frase:'Experiência que transforma técnica em excelência.' }
   ],
 
@@ -99,6 +100,7 @@ window.TV = {
     { id:'pigmentacao',       nome:'Pigmentação',           descricao:'Realça o desenho do corte e da barba.',               preco_centavos:1500,  a_partir_de:false, duracao_min:15, categoria:'Detalhes' },
     { id:'sobrancelha',       nome:'Sobrancelha',           descricao:'Desenho no ponto, sem exagero.',                      preco_centavos:1500,  a_partir_de:false, duracao_min:10, categoria:'Detalhes' },
     { id:'limpeza-pele',      nome:'Limpeza de pele',       descricao:'Limpeza facial para tirar oleosidade e cravos.',      preco_centavos:2000,  a_partir_de:false, duracao_min:25, categoria:'Cuidados' },
+    { id:'freestyle',         nome:'Freestyle',             descricao:'Desenho na lateral, feito à mão. Valor conforme o desenho. Só com o Kelson.', preco_centavos:700, a_partir_de:true, duracao_min:10, categoria:'Detalhes', so_barbeiros:['kelson'] },
     { id:'nevou',             nome:'Nevou',                 descricao:'Platinado. O valor final pode mudar conforme o tamanho do cabelo.', preco_centavos:12000, a_partir_de:true, duracao_min:30, categoria:'Química' }
     // PENDENTE: Luzes (40 min) e Remoção de pelos nasais (5 min) entram quando a Trevus passar o preço.
   ],
@@ -106,8 +108,27 @@ window.TV = {
   // Planos (Fase 2: login do assinante). Por enquanto a vitrine leva ao WhatsApp.
   planos: [
     { nome:'Trevus Basic', preco_centavos:11500, itens:['4 cortes por mês'] },
-    { nome:'Hyper Trevus', preco_centavos:17000, itens:['4 cortes por mês', 'Barba ou sobrancelha'], pendente:true }, // PENDENTE: confirmar o que inclui
+    { nome:'Hyper Trevus', preco_centavos:17000, itens:['4 cortes por mês', '4 barbas por mês'] },
     { nome:'Mega Trevus',  preco_centavos:23000, itens:['4 cortes por mês', 'Barba', 'Sobrancelha'], destaque:true }
+  ],
+
+  // Trabalhos de cada barbeiro (fotos enviadas pela Trevus em 15/10/2026)
+  trabalhos: [
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-freestyle.jpg',   legenda:'Freestyle' },
+    { barbeiro:'hariel', foto:'fotos/trabalhos/hariel-corte.jpg',       legenda:'Corte' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-tesoura.jpg',     legenda:'Corte na tesoura' },
+    { barbeiro:'junior', foto:'fotos/trabalhos/junior-infantil.jpg',    legenda:'Corte infantil' },
+    { barbeiro:'hariel', video:'fotos/trabalhos/hariel-barba.mp4', foto:'fotos/trabalhos/hariel-barba-capa.jpg', legenda:'Barba' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-nevou.jpg',       legenda:'Nevou' },
+    { barbeiro:'hariel', foto:'fotos/trabalhos/hariel-acabamento.jpg',  legenda:'Acabamento' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-mullet.jpg',      legenda:'Mullet' },
+    { barbeiro:'hariel', foto:'fotos/trabalhos/hariel-degrade.jpg',     legenda:'Degradê' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-sobrancelha.jpg', legenda:'Sobrancelha' },
+    { barbeiro:'hariel', foto:'fotos/trabalhos/hariel-infantil.jpg',    legenda:'Infantil' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-cacheado.jpg',    legenda:'Cacheado' },
+    { barbeiro:'hariel', foto:'fotos/trabalhos/hariel-barba.jpg',       legenda:'Barba' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-degrade.jpg',     legenda:'Degradê' },
+    { barbeiro:'kelson', foto:'fotos/trabalhos/kelson-barba.jpg',       legenda:'Corte e barba' }
   ]
 };
 

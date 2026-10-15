@@ -38,6 +38,8 @@ fotos/                             imagens do site
 | Barbearia desmarca | painel lista "devolver R$ X"; devolução pelo app da InfinitePay |
 | Sem preferência | vai para quem já tem crédito do cliente, depois para quem está com menos clientes |
 | Feriado | 8h–17h (local) ou 8h–12h (nacional), sem almoço |
+| Barbearia desmarca em cima da hora | sinal devolvido + 10% no próximo horário do cliente |
+| Freestyle | só com o Kelson |
 
 Expediente: Ter a Sáb 8h–20h com almoço 12h–13h · Dom 8h–12h ·
 **segunda só o Kelson, 14h–20h** · **terça sem o Hariel**.
@@ -123,7 +125,7 @@ diário isso não acontece.
 
 ## Testes
 
-O schema foi testado num Postgres real (PGlite) com 36 cenários: agenda por
+O schema foi testado num Postgres real (PGlite) com 48 cenários: agenda por
 barbeiro, almoço, feriado, sinal, crédito, remarcação, Pix vencido e
 permissões. A função de pagamento foi testada com a InfinitePay, o banco e o
 Brevo simulados (14 cenários, incluindo webhook falso).
@@ -131,11 +133,11 @@ Brevo simulados (14 cenários, incluindo webhook falso).
 ## Pendências da Trevus
 
 - Preço das **luzes** e da **remoção de pelos nasais** (já cadastrados, desligados)
-- O que o **Hyper Trevus** inclui (`config.js > planos`)
-- Bairro: Federação ou Vasco da Gama
-- Corte infantil a R$ 35 (mais caro que o adulto): confirmar
-- Regra dos **10% de desconto** quando o barbeiro desmarca em cima da hora ou falta
-- Fotos dos cortes, fotos individuais e logo em PNG
+- Duração do **freestyle** (provisório: 10 min; só o Kelson faz, a partir de R$ 7)
+- **Regra dos 10%** implementada assim, a confirmar: a barbearia desmarca com menos
+  de 1h (ou o barbeiro falta) -> o sinal é devolvido e o cliente ganha 10% no
+  próximo horário, uma vez, com qualquer barbeiro
+- Mais fotos de trabalhos do **Júnior** (hoje só tem o corte infantil)
 
 ## Fase 2
 

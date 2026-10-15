@@ -44,8 +44,10 @@ create table if not exists public.servicos (
   a_partir_de    boolean not null default false,
   duracao_min    integer not null check (duracao_min between 5 and 480),
   ordem          integer not null default 0,
-  ativo          boolean not null default true
+  ativo          boolean not null default true,
+  so_barbeiros   uuid[]                         -- nulo = todos fazem; senão só estes
 );
+alter table public.servicos add column if not exists so_barbeiros uuid[];
 
 -- ---------------------------------------------------------------------
 -- 3. EXPEDIENTE POR BARBEIRO   0 = domingo ... 6 = sábado
@@ -108,6 +110,7 @@ create table if not exists public.agendamentos (
   preco_centavos   integer not null,
   duracao_min      integer not null,
   sinal_centavos   integer not null default 0,
+  desconto_pct     integer not null default 0,
   credito_usado    integer not null default 0,
   sinal_status     text not null default 'pendente'
                    check (sinal_status in ('pendente','pago','credito','isento','virou_credito',
@@ -134,6 +137,7 @@ create table if not exists public.agendamentos (
 );
 
 alter table public.agendamentos add column if not exists email_enviado_em timestamptz;
+alter table public.agendamentos add column if not exists desconto_pct integer not null default 0;
 alter table public.agendamentos add column if not exists lembrete_enviado_em timestamptz;
 
 create index if not exists agendamentos_data_idx on public.agendamentos (data, barbeiro_id, inicio);
@@ -184,6 +188,20 @@ create table if not exists public.creditos (
 );
 create index if not exists creditos_tel_idx on public.creditos (telefone, barbeiro_id);
 
+-- ---------------------------------------------------------------------
+-- 8. DESCONTOS — a barbearia desmarcou em cima da hora (menos de 1h) ou
+--    o barbeiro faltou: o cliente ganha 10% no próximo horário.
+-- ---------------------------------------------------------------------
+create table if not exists public.descontos (
+  id                 uuid primary key default gen_random_uuid(),
+  telefone           text not null,
+  pct                integer not null check (pct between 1 and 100),
+  origem_agendamento uuid references public.agendamentos(id),
+  usado_em           uuid references public.agendamentos(id),
+  criado_em          timestamptz not null default now()
+);
+create index if not exists descontos_tel_idx on public.descontos (telefone) where usado_em is null;
+
 -- =====================================================================
 --  SEGURANÇA (RLS)
 -- =====================================================================
@@ -194,6 +212,7 @@ alter table public.feriados     enable row level security;
 alter table public.bloqueios    enable row level security;
 alter table public.agendamentos enable row level security;
 alter table public.creditos     enable row level security;
+alter table public.descontos    enable row level security;
 
 do $$
 declare t text;
@@ -203,7 +222,7 @@ begin
     execute format('drop policy if exists %1$s_leitura_publica on public.%1$s', t);
   end loop;
   -- os três sócios (logados) administram tudo
-  foreach t in array array['barbeiros','servicos','expediente','feriados','bloqueios','agendamentos','creditos'] loop
+  foreach t in array array['barbeiros','servicos','expediente','feriados','bloqueios','agendamentos','creditos','descontos'] loop
     execute format('drop policy if exists %1$s_admin on public.%1$s', t);
     execute format('create policy %1$s_admin on public.%1$s for all to authenticated using (true) with check (true)', t);
   end loop;
@@ -305,6 +324,15 @@ returns integer language sql stable security definer set search_path = public as
    where ativo and id = any(p_servicos);
 $$;
 
+-- O barbeiro faz todos os serviços da lista? (freestyle, por exemplo, só o Kelson)
+create or replace function public.barbeiro_faz(p_servicos uuid[], p_barbeiro_id uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select not exists (
+    select 1 from public.servicos s
+     where s.id = any(p_servicos) and s.so_barbeiros is not null
+       and not (p_barbeiro_id = any(s.so_barbeiros)));
+$$;
+
 -- ---------------------------------------------------------------------
 -- slots_disponiveis(data, serviços, barbeiro?) — nulo = sem preferência
 -- ---------------------------------------------------------------------
@@ -315,6 +343,7 @@ language sql stable security definer set search_path = public as $$
     from public.barbeiros b,
          lateral public.slots_barbeiro(p_data, public.duracao_servicos(p_servicos), b.id) s
    where b.ativo and (p_barbeiro_id is null or b.id = p_barbeiro_id)
+     and public.barbeiro_faz(p_servicos, b.id)
    order by s;
 $$;
 
@@ -356,7 +385,8 @@ create or replace function public.criar_agendamento(
   p_obs         text default null
 )
 returns table (id uuid, codigo text, barbeiro text, servico text, dia date, inicio time, fim time,
-               preco_centavos integer, sinal_centavos integer, credito_usado integer, status text)
+               preco_centavos integer, sinal_centavos integer, credito_usado integer, status text,
+               desconto_pct integer)
 language plpgsql volatile security definer set search_path = public as $$
 #variable_conflict use_column
 declare
@@ -373,6 +403,7 @@ declare
   v_resta  integer;
   v_id     uuid;
   v_cod    text;
+  v_desc   public.descontos%rowtype;
   c        record;
 begin
   if length(v_nome) < 2 or length(v_nome) > 80 then
@@ -401,6 +432,7 @@ begin
   select * into v_b from public.barbeiros b
    where b.ativo
      and (p_barbeiro_id is null or b.id = p_barbeiro_id)
+     and public.barbeiro_faz(p_servicos, b.id)
      and exists (select 1 from public.slots_barbeiro(p_data, v_dur, b.id) s where s = p_inicio)
    order by (select coalesce(sum(saldo_centavos),0) from public.creditos cr
               where cr.telefone = v_tel and cr.barbeiro_id = b.id) desc,
@@ -411,6 +443,13 @@ begin
 
   if v_b.id is null then
     raise exception 'HORARIO_INDISPONIVEL' using hint = 'Esse horário acabou de ser ocupado. Escolha outro.';
+  end if;
+
+  -- desconto de 10% pendente (barbearia desmarcou em cima da hora)
+  select * into v_desc from public.descontos d
+   where d.telefone = v_tel and d.usado_em is null order by d.criado_em limit 1 for update;
+  if v_desc.id is not null then
+    v_total := round(v_total * (100 - v_desc.pct) / 100.0)::integer;
   end if;
 
   v_sinal := ceil(v_total / 2.0)::integer;
@@ -431,11 +470,11 @@ begin
 
   insert into public.agendamentos (
     codigo, barbeiro_id, barbeiro_nome, servicos, servico_nome, preco_centavos, duracao_min,
-    sinal_centavos, credito_usado, sinal_status, cliente_nome, cliente_telefone, cliente_email,
+    sinal_centavos, desconto_pct, credito_usado, sinal_status, cliente_nome, cliente_telefone, cliente_email,
     data, inicio, fim, status, expira_em, observacao)
   values (
     v_cod, v_b.id, v_b.nome, v_lista, v_nomes, v_total, v_dur,
-    v_sinal, v_cred, case when v_resta = 0 then 'credito' else 'pendente' end,
+    v_sinal, coalesce(v_desc.pct, 0), v_cred, case when v_resta = 0 then 'credito' else 'pendente' end,
     v_nome, v_tel, v_email,
     p_data, p_inicio, p_inicio + make_interval(mins => v_dur),
     case when v_resta = 0 then 'confirmado' else 'aguardando_pagamento' end,
@@ -443,9 +482,13 @@ begin
     nullif(btrim(p_obs), ''))
   returning agendamentos.id into v_id;
 
+  if v_desc.id is not null then
+    update public.descontos set usado_em = v_id where descontos.id = v_desc.id;
+  end if;
+
   return query
     select a.id, a.codigo, a.barbeiro_nome, a.servico_nome, a.data, a.inicio, a.fim,
-           a.preco_centavos, a.sinal_centavos - a.credito_usado, a.credito_usado, a.status
+           a.preco_centavos, a.sinal_centavos - a.credito_usado, a.credito_usado, a.status, a.desconto_pct
       from public.agendamentos a where a.id = v_id;
 end;
 $$;
@@ -599,6 +642,42 @@ begin
 end;
 $$;
 
+-- A barbearia desmarca (painel). Sinal pago entra na lista "devolver";
+-- com menos de 1h para o horário, o cliente ganha 10% no próximo.
+create or replace function public.desmarcar_pela_barbearia(p_id uuid)
+returns text
+language plpgsql volatile security definer set search_path = public as $$
+declare a public.agendamentos%rowtype; v_tarde boolean;
+begin
+  select * into a from public.agendamentos where id = p_id for update;
+  if not found or a.status <> 'confirmado' then return 'NAO_DESMARCAVEL'; end if;
+  v_tarde := (a.data + a.inicio) < public.agora_bahia() + interval '1 hour';
+  update public.agendamentos
+     set status = 'cancelado', cancelado_em = now(),
+         sinal_status = case when a.sinal_status = 'pago' then 'devolver'
+                             when a.sinal_status = 'credito' then 'virou_credito' else a.sinal_status end
+   where id = a.id;
+  -- a parte do sinal paga com crédito volta como crédito; só o Pix é devolvido
+  if a.sinal_status in ('pago','credito') and a.credito_usado > 0 then
+    insert into public.creditos (telefone, barbeiro_id, valor_centavos, saldo_centavos, origem_agendamento)
+    values (a.cliente_telefone, a.barbeiro_id, a.credito_usado, a.credito_usado, a.id);
+  end if;
+  if v_tarde and a.origem = 'site' then
+    insert into public.descontos (telefone, pct, origem_agendamento) values (a.cliente_telefone, 10, a.id);
+    return 'DESMARCADO_COM_DESCONTO';
+  end if;
+  return 'DESMARCADO';
+end;
+$$;
+
+-- Desconto pendente de um telefone (mostrado na hora de marcar).
+create or replace function public.meu_desconto(p_telefone text)
+returns integer language sql stable security definer set search_path = public as $$
+  select pct from public.descontos
+   where telefone = regexp_replace(coalesce(p_telefone,''), '\D', '', 'g') and usado_em is null
+   order by criado_em limit 1;
+$$;
+
 -- Crédito disponível de um telefone, por barbeiro (mostrado na hora de marcar).
 create or replace function public.meus_creditos(p_telefone text)
 returns table (barbeiro_id uuid, saldo_centavos integer)
@@ -621,7 +700,8 @@ begin
     'criar_agendamento(uuid[],uuid,text,text,text,date,time,text)', 'dados_cobranca(uuid)',
     'registrar_pagamento(uuid,integer,jsonb)', 'status_agendamento(uuid)',
     'consultar_agendamento(text,text)', 'cancelar_agendamento(text,text)',
-    'remarcar_agendamento(text,text,date,time)', 'meus_creditos(text)'] loop
+    'remarcar_agendamento(text,text,date,time)', 'meus_creditos(text)', 'barbeiro_faz(uuid[],uuid)',
+    'desmarcar_pela_barbearia(uuid)', 'meu_desconto(text)'] loop
     execute 'revoke all on function public.' || f || ' from public, anon, authenticated';
   end loop;
 end $$;
@@ -635,6 +715,8 @@ grant execute on function public.consultar_agendamento(text,text)               
 grant execute on function public.cancelar_agendamento(text,text)                             to anon, authenticated;
 grant execute on function public.remarcar_agendamento(text,text,date,time)                   to anon, authenticated;
 grant execute on function public.meus_creditos(text)                                         to anon, authenticated;
+grant execute on function public.meu_desconto(text)                                          to anon, authenticated;
+grant execute on function public.desmarcar_pela_barbearia(uuid)                              to authenticated;
 -- só as Edge Functions (chave service_role)
 grant execute on function public.dados_cobranca(uuid)                 to service_role;
 grant execute on function public.registrar_pagamento(uuid,integer,jsonb) to service_role;
@@ -644,9 +726,9 @@ grant execute on function public.registrar_pagamento(uuid,integer,jsonb) to serv
 -- =====================================================================
 
 insert into public.barbeiros (slug, nome, foto, instagram, especialidade, frase, anos_profissao, ordem) values
-  ('kelson', 'Kelson', 'fotos/kelson.jpg', 'kelsonstrevus', 'Cortes na tesoura',      'Cortes que comunicam poder.',                    4,  1),
-  ('junior', 'Júnior', 'fotos/junior.jpg', 'juniortrevus',  'Química e platinado',    'Autoestima renovada em cada atendimento.',       10, 2),
-  ('hariel', 'Hariel', 'fotos/hariel.jpg', 'haridade1996',  'Degradê',                'Experiência que transforma técnica em excelência.', 13, 3)
+  ('kelson', 'Kelson', 'fotos/perfil-kelson.jpg', 'kelsonstrevus', 'Cortes na tesoura',      'Cortes que comunicam poder.',                    4,  1),
+  ('junior', 'Júnior', 'fotos/perfil-junior.jpg', 'juniortrevus',  'Química e platinado',    'Autoestima renovada em cada atendimento.',       10, 2),
+  ('hariel', 'Hariel', 'fotos/perfil-hariel.jpg', 'haridade1996',  'Degradê',                'Experiência que transforma técnica em excelência.', 13, 3)
 on conflict (slug) do update set
   nome = excluded.nome, foto = excluded.foto, instagram = excluded.instagram,
   especialidade = excluded.especialidade, frase = excluded.frase,
@@ -702,12 +784,17 @@ insert into public.servicos (slug, nome, descricao, categoria, preco_centavos, a
   ('sobrancelha',       'Sobrancelha',          'Desenho no ponto, sem exagero.',                       'Detalhes',      1500,  false, 10, 12, true),
   ('pelos-nasais',      'Remoção de pelos nasais', 'Rápido e sem dor.',                                 'Detalhes',      1000,  false,  5, 13, false), -- PENDENTE: preço
   ('limpeza-pele',      'Limpeza de pele',      'Limpeza facial para tirar oleosidade e cravos.',       'Cuidados',      2000,  false, 25, 14, true),
+  ('freestyle',         'Freestyle',            'Desenho na lateral, feito à mão. Valor conforme o desenho.', 'Detalhes', 700, true, 10, 13, true), -- PENDENTE: duração
   ('nevou',             'Nevou',                'Platinado. O valor final pode mudar conforme o tamanho do cabelo.', 'Química', 12000, true, 30, 15, true),
   ('luzes',             'Luzes',                'Mechas no tom certo.',                                 'Química',       8000,  true,  40, 16, false)  -- PENDENTE: preço
 on conflict (slug) do update set
   nome = excluded.nome, descricao = excluded.descricao, categoria = excluded.categoria,
   preco_centavos = excluded.preco_centavos, a_partir_de = excluded.a_partir_de,
   duracao_min = excluded.duracao_min, ordem = excluded.ordem, ativo = excluded.ativo;
+
+-- Freestyle: só o Kelson faz.
+update public.servicos set so_barbeiros = array(select id from public.barbeiros where slug = 'kelson')
+ where slug = 'freestyle';
 
 -- ---------------------------------------------------------------------
 -- Depois de criar o login de cada sócio (Authentication > Users):

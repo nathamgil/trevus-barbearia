@@ -458,3 +458,27 @@ h3{font-size:1.1rem;letter-spacing:.04em}
 .remarcar{display:grid;gap:.6rem;margin-top:1rem}
 .remarcar h3{font-size:1.05rem}
 .remarcar .dica{font-size:.86rem;color:var(--cinza)}
+
+/* ---------- v3: trabalhos ---------- */
+.filtro-trab{display:flex;gap:.45rem;flex-wrap:wrap;margin:1.6rem 0 1.2rem}
+.filtro-trab button{min-height:44px;padding:0 1.1rem;border-radius:100px;border:1px solid var(--borda);background:var(--mata);font-weight:700;font-size:.9rem;color:var(--cinza)}
+.filtro-trab button[aria-pressed="true"]{border-color:var(--ouro);color:var(--ouro-claro);background:rgba(215,174,79,.1)}
+.trabalhos{columns:4 220px;column-gap:.8rem}
+.trabalhos figure{break-inside:avoid;margin:0 0 .8rem;position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--borda);background:var(--musgo)}
+.trabalhos img,.trabalhos video{display:block;width:100%;height:auto}
+.trabalhos figcaption{position:absolute;left:0;right:0;bottom:0;padding:1.6rem .8rem .7rem;background:linear-gradient(transparent,rgba(7,16,12,.9));display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.trabalhos figcaption b{font-size:.92rem}
+.trabalhos figcaption span{font-size:.76rem;color:var(--ouro-claro);font-weight:700}
+.membro img{object-position:50% 18%}
+
+/* v3: card da equipe com foto em cima e texto embaixo (o texto não cobre mais o rosto) */
+.membro{aspect-ratio:auto;display:flex;flex-direction:column}
+.membro img{position:static;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;z-index:auto}
+.membro::after{display:none}
+.membro-info{position:static;padding:1.1rem 1.2rem 1.3rem;display:flex;flex-direction:column;flex:1}
+.membro-info blockquote{margin:0 0 1rem;color:var(--cinza)}
+.membro-acoes{margin-top:auto}
+.membro-acoes{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.membro-acoes .btn{padding:.55rem .6rem;font-size:.78rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.membro-acoes .btn-ouro{grid-column:1 / -1;font-size:.86rem}
+.membro-acoes > :only-of-type{grid-column:1 / -1}
