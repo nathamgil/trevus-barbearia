@@ -356,8 +356,9 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- Código curto e único que o cliente guarda.
+-- No Supabase o pgcrypto (gen_random_bytes) mora no schema "extensions".
 create or replace function public.novo_codigo()
-returns text language plpgsql volatile set search_path = public as $$
+returns text language plpgsql volatile set search_path = public, extensions as $$
 declare v text;
 begin
   loop
