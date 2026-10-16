@@ -74,7 +74,7 @@ confirma na hora). A agenda já vem com clientes "(exemplo)".
 npx supabase login
 npx supabase link --project-ref <ref-do-projeto>
 npx supabase functions deploy pagamento --no-verify-jwt
-npx supabase secrets set SITE_URL=https://trevusbarbearia.com.br BREVO_API_KEY=... EMAIL_REMETENTE=... EMAIL_BARBEARIA=trevusbarbearia77@gmail.com CRON_SECRET=<senha-longa>
+npx supabase secrets set BREVO_API_KEY=...   (SITE_URL, EMAIL_REMETENTE e EMAIL_BARBEARIA já estão no painel)
 ```
 
 Lembrete da véspera (todo dia às 18h de Salvador = 21h UTC). No SQL Editor:
@@ -83,7 +83,7 @@ create extension if not exists pg_cron; create extension if not exists pg_net;
 select cron.schedule('lembretes-trevus', '0 21 * * *', $$
   select net.http_post(
     url := 'https://<ref>.supabase.co/functions/v1/pagamento?acao=lembretes',
-    headers := '{"Content-Type":"application/json","x-cron-secret":"<senha-longa>"}'::jsonb,
+    headers := '{"Content-Type":"application/json"}'::jsonb,
     body := '{}'::jsonb)
 $$);
 ```

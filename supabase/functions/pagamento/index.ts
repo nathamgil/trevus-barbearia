@@ -15,7 +15,6 @@
 //    BREVO_API_KEY    chave da conta Brevo da barbearia (e-mails)
 //    EMAIL_REMETENTE  e-mail verificado no Brevo
 //    EMAIL_BARBEARIA  quem recebe o aviso de cada agendamento
-//    CRON_SECRET      senha que o agendador manda em ?acao=lembretes
 //  SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já vêm do Supabase.
 //
 //  Publicar:  supabase functions deploy pagamento --no-verify-jwt
@@ -29,7 +28,6 @@ const SITE_URL = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
 const BREVO    = Deno.env.get("BREVO_API_KEY") ?? "";
 const REMETENTE = Deno.env.get("EMAIL_REMETENTE") ?? "";
 const BARBEARIA = Deno.env.get("EMAIL_BARBEARIA") ?? "";
-const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 
 const IP_API = "https://api.checkout.infinitepay.io";
 const ENDERECO = "Rua Sérgio de Carvalho, 28 - Federação, Salvador - BA";
@@ -239,10 +237,9 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    if (acao === "lembretes") {
-      if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) return json({ erro: "proibido" }, 403);
-      return json({ enviados: await lembretes() });
-    }
+    // Sem senha: cada lembrete sai uma vez só (lembrete_enviado_em) e só para
+    // os horários de amanhã, então chamar fora de hora não causa estrago.
+    if (acao === "lembretes") return json({ enviados: await lembretes() });
 
     return json({ erro: "ação desconhecida" }, 400);
   } catch (e) {

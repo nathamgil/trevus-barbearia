@@ -34,8 +34,8 @@ window.TV = {
      A chave anon é pública por natureza; quem protege os dados é o RLS e
      as funções do schema.sql.
   ------------------------------------------------------------------ */
-  supabaseUrl: '',
-  supabaseKey: '',
+  supabaseUrl: 'https://cnkfzuqvofzeahinxqyn.supabase.co',
+  supabaseKey: 'sb_publishable_wcXAjHEYyw1AsAfNZaTmjg_jXLLsFDk',   // chave pública (publishable)
 
   /* ---- Regras da agenda (espelham o db/schema.sql) ----------------
      Mudou aqui? Mude no banco também: o banco é quem manda de verdade.
