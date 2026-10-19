@@ -59,6 +59,32 @@
       </div>
     </form>
     <div id="msg-login"></div>
+    <button class="voltar" id="abre-link" type="button" style="margin-top:.6rem">Primeiro acesso ou esqueceu a senha?</button>
+    <form id="form-link" hidden style="margin-top:1rem">
+      <p class="sub" style="margin:0 0 .8rem">Coloque seu e-mail. Mandamos um link para você criar a senha (vale por 24 horas).</p>
+      <div class="campos">
+        <div class="campo"><label for="lk-email">E-mail</label><input id="lk-email" type="email" autocomplete="username" required></div>
+        <button class="btn btn-linha btn-bloco" type="submit">Receber link para criar senha</button>
+      </div>
+    </form>
+    <div id="msg-link"></div>
+  </div>
+</div>
+
+<!-- ---------- CRIAR SENHA (link do convite ou de recuperação) ---------- -->
+<div class="wrap login" id="tela-senha" hidden>
+  <div class="cartao">
+    <p class="olho">Trevus Barbearia</p>
+    <h2 style="font-size:1.6rem;margin-bottom:.4rem">Crie sua senha</h2>
+    <p class="sub" style="margin:0 0 1.2rem" id="senha-quem"></p>
+    <form id="form-senha">
+      <div class="campos">
+        <div class="campo"><label for="nv-senha">Nova senha</label><input id="nv-senha" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div class="campo"><label for="nv-senha2">Repita a senha</label><input id="nv-senha2" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-ouro btn-bloco" type="submit">Salvar senha e entrar</button>
+      </div>
+    </form>
+    <div id="msg-senha"></div>
   </div>
 </div>
 
@@ -701,14 +727,57 @@
       $('#bc-data').value = iso(agora);
       $('#bc-hora').value = deMinutos(Math.ceil((agora.getHours() * 60 + agora.getMinutes()) / 5) * 5 % 1440);
 
-      $('#tela-login').hidden = true; $('#tela-painel').hidden = false;
+      $('#tela-login').hidden = true; $('#tela-senha').hidden = true; $('#tela-painel').hidden = false;
+      if (location.hash) history.replaceState(null, '', location.pathname);
       atualizaTudo();
     }).catch(function (e) { aviso($('#msg-login'), 'aviso-erro', 'Não consegui carregar a equipe: ' + e.message); });
   }
 
   if (DEMO) { $('#faixa-demo').hidden = false; $('#btn-sair').hidden = true; abrePainel(null); return; }
 
+  // O link do e-mail (convite ou "esqueci a senha") chega com dados no #hash.
+  // Lido antes do Supabase limpar a barra de endereço.
+  var hashLink = new URLSearchParams(location.hash.slice(1));
+  var tipoLink = hashLink.get('type');                 // invite | recovery
+  var erroLink = hashLink.get('error_code') || hashLink.get('error');
+
   sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+
+  function mostraTela(id) {
+    ['#tela-login', '#tela-senha', '#tela-painel'].forEach(function (t) { $(t).hidden = t !== id; });
+  }
+  function abreCriarSenha(email) {
+    $('#senha-quem').textContent = email ? 'Acesso de ' + email + '. Escolha uma senha com pelo menos 8 caracteres.' : '';
+    mostraTela('#tela-senha');
+  }
+
+  $('#abre-link').addEventListener('click', function () {
+    $('#form-link').hidden = false; this.hidden = true;
+    $('#lk-email').value = $('#lg-email').value; $('#lk-email').focus();
+  });
+  $('#form-link').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-link'), email = $('#lk-email').value.trim();
+    aviso(cx, 'aviso-neutro', 'Enviando…');
+    sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function (r) {
+      if (r.error) return aviso(cx, 'aviso-erro', /rate/i.test(r.error.message)
+        ? 'Muitos pedidos seguidos. Espere alguns minutos e tente de novo.' : 'Não consegui enviar: ' + r.error.message);
+      aviso(cx, 'aviso-ok', 'Pronto! Se esse e-mail for de um dos barbeiros, o link chega em instantes. Olhe também o Spam e a aba Promoções.');
+    });
+  });
+  $('#form-senha').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-senha'), s1 = $('#nv-senha').value, s2 = $('#nv-senha2').value;
+    if (s1.length < 8) return aviso(cx, 'aviso-erro', 'A senha precisa ter pelo menos 8 caracteres.');
+    if (s1 !== s2) return aviso(cx, 'aviso-erro', 'As duas senhas não estão iguais.');
+    aviso(cx, 'aviso-neutro', 'Salvando…');
+    sb.auth.updateUser({ password: s1 }).then(function (r) {
+      if (r.error) return aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Peça um link novo na tela de entrada.');
+      cx.innerHTML = '';
+      abrePainel(r.data.user.id);
+    });
+  });
+
   $('#form-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var cx = $('#msg-login'); aviso(cx, 'aviso-neutro', 'Entrando…');
@@ -719,7 +788,14 @@
   });
   $('#btn-sair').addEventListener('click', function () { sb.auth.signOut().then(function () { location.reload(); }); });
   sb.auth.getSession().then(function (r) {
-    if (r.data && r.data.session) abrePainel(r.data.session.user.id); else $('#tela-login').hidden = false;
+    var s = r.data && r.data.session;
+    if (s && (tipoLink === 'invite' || tipoLink === 'recovery')) return abreCriarSenha(s.user.email);
+    if (s) return abrePainel(s.user.id);
+    mostraTela('#tela-login');
+    if (erroLink) {
+      aviso($('#msg-login'), 'aviso-erro', 'Esse link expirou ou já foi usado. Peça um novo abaixo: é rapidinho.');
+      $('#abre-link').click();
+    }
   });
 })();
 </script>
