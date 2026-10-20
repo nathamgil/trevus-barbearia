@@ -311,6 +311,31 @@ async function avisarPagamentoPlano(id: string, res: string) {
       `${a.nome} · WhatsApp ${a.telefone} · ${a.email}<br>${a.planos.nome} com ${a.barbeiros.nome} · ${reais(pg.valor_centavos)} · vale até ${dataBR(vence)}`));
 }
 
+// Sócio pediu link pela tela "Entrar": recuperação de senha que abre o painel.
+const ultimoPedidoEquipe = new Map<string, number>();
+async function acessoEquipe(email: string) {
+  if (Date.now() - (ultimoPedidoEquipe.get(email) ?? 0) < 120000) return;
+  const socios = await banco(`barbeiros?user_id=not.is.null&select=nome,user_id`);
+  for (const s of socios ?? []) {
+    const u = await fetch(`${SB_URL}/auth/v1/admin/users/${s.user_id}`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } })
+      .then((r) => r.json()).catch(() => ({}));
+    if (String(u.email ?? "").toLowerCase() !== email) continue;
+    ultimoPedidoEquipe.set(email, Date.now());
+    const g = await fetch(`${SB_URL}/auth/v1/admin/generate_link`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "recovery", email, redirect_to: `${SITE_URL}/admin.html` }),
+    }).then((r) => r.json());
+    const link = g.action_link ?? g.properties?.action_link;
+    if (!link) return;
+    await enviar(email, "Seu link para entrar no painel da Trevus", moldura(`Oi, ${s.nome}!`,
+      "Toque no botão para criar uma senha nova e entrar no painel dos barbeiros.",
+      `<p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#D7AE4F;color:#1B1405;padding:14px 26px;border-radius:10px;font-weight:bold;text-decoration:none;display:inline-block">Criar minha senha</a></p>
+       <p style="font-size:13px;color:#4A5C52">O link vale por 24 horas.</p>`));
+    return;
+  }
+}
+
 // Quem chama é um sócio logado? (o token vem do painel)
 async function eSocio(req: Request) {
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
@@ -404,6 +429,7 @@ Deno.serve(async (req) => {
         const a = (await banco(`assinantes?email=eq.${encodeURIComponent(email)}&status=in.(ativo,vencido)&select=*`))?.[0];
         if (a && (!a.acesso_enviado_em || Date.now() - new Date(a.acesso_enviado_em).getTime() > 120000))
           await enviarAcesso(a, a.user_id ? "pedido" : "novo").catch(console.error);
+        else if (!a) await acessoEquipe(email).catch(console.error);
       }
       return json({ ok: true });
     }

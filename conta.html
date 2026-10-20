@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar · Trevus Barbearia</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07100C">
+<link rel="icon" href="fotos/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/estilo.css">
+<style>
+  .login{max-width:26rem;margin:3.5rem auto}
+  .perfil{display:flex;gap:1.1rem;align-items:center;flex-wrap:wrap}
+  .avatar{width:96px;height:96px;border-radius:50%;overflow:hidden;flex:none;background:var(--folha);border:2px solid var(--ouro-fundo);
+    display:grid;place-items:center;font-family:var(--display);font-size:2rem;color:var(--ouro-claro);position:relative}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .perfil h1{font-size:clamp(1.4rem,5vw,1.9rem);line-height:1.15}
+  .perfil-sub{color:var(--cinza);font-size:.92rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.3rem}
+  .perfil-sub img{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:50% 22%}
+  .troca-foto{font-size:.85rem;color:var(--ouro);font-weight:700;min-height:44px;display:inline-flex;align-items:center;text-decoration:underline}
+  .bloco{margin-top:1.4rem}
+  .bloco > h2{font-size:1.2rem;margin-bottom:.8rem}
+  .situacao{border-radius:16px;padding:1.1rem 1.2rem;border:1px solid var(--borda);background:var(--mata)}
+  .situacao.ok{border-color:rgba(37,211,102,.4)}
+  .situacao.alerta{border-color:rgba(224,101,96,.55);background:rgba(224,101,96,.08)}
+  .situacao b{font-size:1.05rem}
+  .situacao p{color:var(--cinza);font-size:.92rem;margin-top:.25rem}
+  .saldos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+  .saldo{background:var(--mata);border:1px solid var(--borda);border-radius:14px;padding:.9rem 1rem}
+  .saldo span{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cinza);font-weight:800}
+  .saldo b{display:block;font-family:var(--display);font-size:1.9rem;color:var(--ouro-claro);line-height:1.2}
+  .saldo small{color:var(--cinza);font-size:.85rem}
+  .trilho{height:8px;border-radius:9px;background:var(--folha);margin-top:.5rem;overflow:hidden}
+  .trilho i{display:block;height:100%;background:var(--ouro-gradiente);border-radius:9px}
+  .passo-tit{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cinza);font-weight:800;margin:1.2rem 0 .6rem}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap topo-in">
+    <a class="marca" href="index.html">
+      <img src="fotos/logo.jpg" alt="" width="44" height="44">
+      <span><b>TREVUS</b><small>Assinantes e equipe</small></span>
+    </a>
+    <button class="btn btn-linha mini" id="btn-sair" type="button" hidden>Sair</button>
+  </div>
+</header>
+
+<!-- ---------- VOLTA DO PAGAMENTO (ainda sem login) ---------- -->
+<div class="wrap login" id="tela-retorno" hidden>
+  <div class="cartao" style="text-align:center">
+    <p class="olho">Plano Trevus</p>
+    <h2 style="font-size:1.6rem;margin:.4rem 0 .8rem" id="ret-titulo">Conferindo seu pagamento…</h2>
+    <p class="sub" style="margin:0 auto" id="ret-texto">Só um instante.</p>
+    <div class="acoes" style="justify-content:center"><a class="btn btn-ouro" href="conta.html" id="ret-botao" hidden>Ir para a entrada</a></div>
+  </div>
+</div>
+
+<!-- ---------- LOGIN ---------- -->
+<div class="wrap login" id="tela-login" hidden>
+  <div class="cartao">
+    <p class="olho">Trevus Barbearia</p>
+    <h2 style="font-size:1.6rem;margin-bottom:.3rem">Entrar</h2>
+    <p class="sub" style="margin:0 0 1.2rem">Para assinantes dos planos e para a equipe da Trevus. O mesmo e-mail e senha levam cada um para a sua área.</p>
+    <form id="form-login">
+      <div class="campos">
+        <div class="campo"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="username" required></div>
+        <div class="campo"><label for="lg-senha">Senha</label><input id="lg-senha" type="password" autocomplete="current-password" required></div>
+        <button class="btn btn-ouro btn-bloco" type="submit">Entrar</button>
+      </div>
+    </form>
+    <div id="msg-login"></div>
+    <button class="voltar" id="abre-link" type="button" style="margin-top:.6rem">Primeiro acesso ou esqueceu a senha?</button>
+    <form id="form-link" hidden style="margin-top:1rem">
+      <p class="sub" style="margin:0 0 .8rem">Coloque o e-mail do seu plano (ou o seu e-mail da equipe). Mandamos um link para você criar a senha (vale por 24 horas).</p>
+      <div class="campos">
+        <div class="campo"><label for="lk-email">E-mail</label><input id="lk-email" type="email" autocomplete="username" required></div>
+        <button class="btn btn-linha btn-bloco" type="submit">Receber link</button>
+      </div>
+    </form>
+    <div id="msg-link"></div>
+    <p class="sub" style="margin-top:1.4rem;font-size:.9rem">Ainda não é assinante? <a href="index.html#planos" style="color:var(--ouro);text-decoration:underline">Conheça os planos</a>.</p>
+  </div>
+</div>
+
+<!-- ---------- CRIAR SENHA ---------- -->
+<div class="wrap login" id="tela-senha" hidden>
+  <div class="cartao">
+    <p class="olho">Trevus Barbearia</p>
+    <h2 style="font-size:1.6rem;margin-bottom:.4rem">Crie sua senha</h2>
+    <p class="sub" style="margin:0 0 1.2rem" id="senha-quem"></p>
+    <form id="form-senha">
+      <div class="campos">
+        <div class="campo"><label for="nv-senha">Nova senha</label><input id="nv-senha" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div class="campo"><label for="nv-senha2">Repita a senha</label><input id="nv-senha2" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-ouro btn-bloco" type="submit">Salvar senha e entrar</button>
+      </div>
+    </form>
+    <div id="msg-senha"></div>
+  </div>
+</div>
+
+<!-- ---------- CONTA ---------- -->
+<main class="wrap" id="tela-conta" hidden style="padding-top:1.6rem;padding-bottom:5rem;max-width:860px">
+  <div id="msg-conta"></div>
+
+  <section class="perfil">
+    <div class="avatar" id="avatar"></div>
+    <div style="flex:1;min-width:200px">
+      <h1 id="pf-nome">—</h1>
+      <div class="perfil-sub" id="pf-sub"></div>
+      <label class="troca-foto" for="foto-arquivo" id="troca-foto">Colocar minha foto</label>
+      <input type="file" id="foto-arquivo" accept="image/*" hidden>
+    </div>
+  </section>
+  <div id="msg-foto"></div>
+
+  <section class="bloco">
+    <div class="situacao" id="situacao"></div>
+  </section>
+
+  <section class="bloco" id="bloco-saldo">
+    <h2>Saldo deste mês</h2>
+    <div class="saldos" id="saldos"></div>
+  </section>
+
+  <section class="bloco" id="bloco-marcar">
+    <h2>Marcar horário pelo plano</h2>
+    <div class="cartao">
+      <p class="sub" style="margin:0" id="marcar-dica"></p>
+      <p class="passo-tit">1. Serviços</p>
+      <div class="lista-escolha" id="mc-servicos"></div>
+      <div id="mc-etapa-dia" hidden>
+        <p class="passo-tit">2. Dia</p>
+        <div class="fita" id="mc-dias"></div>
+        <p class="passo-tit">3. Horário</p>
+        <div id="mc-horas"></div>
+      </div>
+      <div id="mc-confirma"></div>
+    </div>
+  </section>
+
+  <section class="bloco">
+    <h2>Meus próximos horários</h2>
+    <div class="cartao" id="meus-horarios"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var CFG = window.TV, sb;
+  var SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  var SEM3 = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var NOMES_COTA = { corte: ['Corte', 'Cortes'], barba: ['Barba', 'Barbas'], sobrancelha: ['Sobrancelha', 'Sobrancelhas'] };
+
+  function $(s){ return document.querySelector(s); }
+  function el(t,c,x){ var n=document.createElement(t); if(c)n.className=c; if(x!=null)n.textContent=x; return n; }
+  function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function deIso(s){ var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+  function dataBR(s){ return String(s).split('-').reverse().join('/'); }
+  function hhmm(t){ return String(t).slice(0,5); }
+  function dinheiro(c){ return 'R$ '+(c/100).toFixed(2).replace('.',','); }
+  function porExtenso(s){ var d=deIso(s); return SEMANA[d.getDay()]+', '+d.getDate()+' de '+MESES[d.getMonth()]; }
+  function aviso(cx,cls,txt){ cx.innerHTML=''; if (txt) cx.appendChild(el('div','aviso '+cls,txt)); }
+  function maisUmMes(s){ var d=deIso(s); d.setMonth(d.getMonth()+1); return iso(d); }
+  function mostra(id){ ['#tela-retorno','#tela-login','#tela-senha','#tela-conta'].forEach(function(t){ $(t).hidden = t!==id; }); }
+  function erroDe(r){ return (r.error && (r.error.hint || r.error.message)) || 'Não deu certo. Tente de novo.'; }
+  function funcao(acao, corpo, token) {
+    return fetch(CFG.supabaseUrl + '/functions/v1/pagamento?acao=' + acao, {
+      method: 'POST', body: JSON.stringify(corpo || {}),
+      headers: { apikey: CFG.supabaseKey, Authorization: 'Bearer ' + (token || CFG.supabaseKey), 'Content-Type': 'application/json' }
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.erro || 'Falha de conexão.'); return j; }); });
+  }
+
+  if (CFG.modoDemo) {
+    mostra('#tela-login');
+    aviso($('#msg-login'), 'aviso-neutro', 'A área do assinante só funciona com o site ligado ao banco de dados.');
+    return;
+  }
+
+  // dados do link do e-mail (#hash) e da volta do pagamento (?plano=)
+  var hashLink = new URLSearchParams(location.hash.slice(1));
+  var tipoLink = hashLink.get('type'), erroLink = hashLink.get('error_code') || hashLink.get('error');
+  var busca = new URLSearchParams(location.search);
+  var voltaPlano = busca.get('plano');
+  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+
+  var eu = null, servicos = [], escolha = { servicos: [], dia: null };
+
+  /* ---------------- volta do pagamento ---------------- */
+  function conferePagamento(tentativa) {
+    funcao('verificar_plano', { pagamento_id: voltaPlano, transaction_nsu: busca.get('transaction_nsu') || '', slug: busca.get('slug') || '' })
+      .then(function (r) {
+        if (!r.pago) {
+          if (tentativa < 8) return setTimeout(function(){ conferePagamento(tentativa + 1); }, 3000);
+          $('#ret-titulo').textContent = 'Ainda não vimos o pagamento';
+          $('#ret-texto').textContent = 'Se você pagou, ele aparece em alguns minutos e o e-mail de acesso chega sozinho. Dúvidas? Fale no WhatsApp ' + CFG.whatsappVisivel + '.';
+          $('#ret-botao').hidden = false; return;
+        }
+        $('#ret-titulo').textContent = 'Pagamento confirmado!';
+        $('#ret-texto').textContent = r.tem_acesso
+          ? 'Seu plano está garantido. Entre com seu e-mail e senha para marcar.'
+          : 'Seu plano está ativo. Mandamos para ' + (r.email || 'o seu e-mail') + ' o link para criar sua senha. Olhe também o Spam e a aba Promoções.';
+        $('#ret-botao').hidden = false;
+      }).catch(function () { if (tentativa < 8) setTimeout(function(){ conferePagamento(tentativa + 1); }, 3000); });
+  }
+
+  /* ---------------- conta ---------------- */
+  function carregaConta() {
+    return sb.rpc('meu_plano').then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      eu = r.data && r.data[0];
+      $('#btn-sair').hidden = false;
+      if (!eu) {
+        mostra('#tela-login');
+        sb.rpc('e_socio').then(function (s) {
+          if (s.data) { location.replace('admin.html'); return; }
+          aviso($('#msg-login'), 'aviso-neutro', 'Essa conta não tem plano. Veja os planos na página inicial.');
+        });
+        return;
+      }
+      mostra('#tela-conta');
+      if (location.hash || location.search) history.replaceState(null, '', location.pathname);
+      pintaPerfil(); pintaSituacao(); pintaSaldo(); pintaMarcar(); pintaHorarios();
+    }).catch(function (e) { mostra('#tela-login'); aviso($('#msg-login'), 'aviso-erro', e.message); });
+  }
+
+  function pintaPerfil() {
+    var av = $('#avatar'); av.innerHTML = '';
+    if (eu.foto) { var im = el('img'); im.src = eu.foto; im.alt = 'Sua foto'; av.appendChild(im); }
+    else av.textContent = (eu.nome || '?').trim().charAt(0).toUpperCase();
+    $('#troca-foto').textContent = eu.foto ? 'Trocar foto' : 'Colocar minha foto';
+    $('#pf-nome').textContent = eu.nome;
+    var sub = $('#pf-sub'); sub.innerHTML = '';
+    sub.appendChild(el('span','tag tag-barbeiro', eu.plano));
+    if (eu.barbeiro_foto) { var fb = el('img'); fb.src = eu.barbeiro_foto; fb.alt = ''; sub.appendChild(fb); }
+    sub.appendChild(el('span', null, 'com ' + eu.barbeiro));
+  }
+
+  function pintaSituacao() {
+    var cx = $('#situacao'); cx.innerHTML = ''; cx.className = 'situacao';
+    var hoje = iso(new Date());
+    var dias = eu.vence_em ? Math.round((deIso(eu.vence_em) - deIso(hoje)) / 86400000) : 0;
+    var pagar = null;
+    if (eu.status === 'ativo') {
+      cx.classList.add('ok');
+      if (eu.proximo_pago) {
+        cx.appendChild(el('b', null, 'Plano ativo · próximo mês já pago'));
+        cx.appendChild(el('p', null, 'Garantido até ' + dataBR(maisUmMes(eu.vence_em)) + '. O saldo renova sozinho em ' + dataBR(eu.vence_em) + '.'));
+      } else {
+        cx.appendChild(el('b', null, 'Plano ativo até ' + dataBR(eu.vence_em)));
+        cx.appendChild(el('p', null, dias <= 5
+          ? 'A mensalidade de ' + dinheiro(eu.plano_preco) + ' vence ' + (dias <= 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias') + '. Pague e o saldo renova sem interrupção.'
+          : 'Mensalidade de ' + dinheiro(eu.plano_preco) + ' todo dia ' + deIso(eu.vence_em).getDate() + '. Você recebe o link por e-mail 3 dias antes.'));
+        if (dias <= 5) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
+      }
+    } else {
+      cx.classList.add('alerta');
+      cx.appendChild(el('b', null, 'Plano pausado: mensalidade em aberto'));
+      cx.appendChild(el('p', null, 'Venceu em ' + dataBR(eu.vence_em) + '. Pague ' + dinheiro(eu.plano_preco) + ' para voltar a marcar sem sinal. O novo mês começa no dia do pagamento.'));
+      pagar = 'Pagar ' + dinheiro(eu.plano_preco) + ' e reativar';
+    }
+    if (pagar) {
+      var ac = el('div','acoes'); ac.style.marginTop = '.9rem';
+      var b = el('button','btn btn-ouro', pagar); b.type = 'button';
+      b.addEventListener('click', function () { pagarMensalidade(b); });
+      ac.appendChild(b); ac.appendChild(el('span', 'pg-regras', 'Pix ou cartão, pela InfinitePay do ' + eu.barbeiro + '.'));
+      cx.appendChild(ac);
+    }
+  }
+
+  function pagarMensalidade(b) {
+    b.disabled = true; b.textContent = 'Abrindo o pagamento…';
+    sb.rpc('minha_cobranca').then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      if (!r.data) { carregaConta(); return; }
+      return funcao('cobrar_plano', { pagamento_id: r.data }).then(function (j) { location.href = j.checkout_url; });
+    }).catch(function (e) { b.disabled = false; b.textContent = 'Tentar de novo'; aviso($('#msg-conta'), 'aviso-erro', e.message); });
+  }
+
+  function pintaSaldo() {
+    var cx = $('#saldos'); cx.innerHTML = '';
+    $('#bloco-saldo').hidden = eu.status !== 'ativo';
+    Object.keys(eu.cotas || {}).forEach(function (k) {
+      var total = eu.cotas[k], resta = (eu.saldo || {})[k] || 0, nome = NOMES_COTA[k] || [k, k];
+      var s = el('div','saldo');
+      s.appendChild(el('span', null, nome[1]));
+      var b = el('b', null, String(resta)); s.appendChild(b);
+      s.appendChild(el('small', null, 'de ' + total + ' no mês'));
+      var t = el('div','trilho'), i = el('i'); i.style.width = Math.round(resta / total * 100) + '%'; t.appendChild(i); s.appendChild(t);
+      cx.appendChild(s);
+    });
+  }
+
+  /* ---------------- marcar pelo plano ---------------- */
+  function cobre(s) { return s.consome && Object.keys(s.consome).every(function (k) { return (eu.cotas || {})[k] > 0; }); }
+  function limite() { return eu.proximo_pago ? maisUmMes(eu.vence_em) : eu.vence_em; }
+
+  function pintaMarcar() {
+    var bloco = $('#bloco-marcar');
+    bloco.hidden = eu.status !== 'ativo';
+    if (bloco.hidden) return;
+    $('#marcar-dica').textContent = 'Com o ' + eu.barbeiro + ', sem sinal. O que não está no plano você marca pelo agendamento normal do site.';
+    escolha = { servicos: [], dia: null };
+    $('#mc-etapa-dia').hidden = true; $('#mc-confirma').innerHTML = '';
+    var cx = $('#mc-servicos'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
+    (servicos.length ? Promise.resolve({ data: servicos }) :
+      sb.from('servicos').select('id,nome,duracao_min,consome,so_barbeiros,ordem').eq('ativo', true).order('ordem')
+    ).then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      servicos = r.data;
+      cx.innerHTML = '';
+      servicos.filter(cobre).filter(function (s) { return !s.so_barbeiros || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
+        .forEach(function (s) {
+          var bt = el('button','opcao opcao-multi'); bt.type = 'button'; bt.setAttribute('aria-pressed','false');
+          bt.appendChild(el('span','caixinha'));
+          var tx = el('span'); tx.appendChild(el('strong', null, s.nome)); tx.appendChild(el('span', null, s.duracao_min + ' min')); bt.appendChild(tx);
+          bt.addEventListener('click', function () {
+            var i = escolha.servicos.indexOf(s);
+            if (i >= 0) escolha.servicos.splice(i, 1); else escolha.servicos.push(s);
+            bt.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true');
+            escolha.dia = null; $('#mc-confirma').innerHTML = '';
+            pintaDias();
+          });
+          cx.appendChild(bt);
+        });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+  }
+
+  function idsEscolhidos() { return escolha.servicos.map(function (s) { return s.id; }); }
+
+  function pintaDias() {
+    var etapa = $('#mc-etapa-dia'), velho = $('#aviso-lim');
+    if (velho) velho.remove();
+    etapa.hidden = !escolha.servicos.length;
+    if (etapa.hidden) return;
+    var fita = $('#mc-dias'); fita.innerHTML = '<div class="carregando">Procurando dias livres…</div>'; $('#mc-horas').innerHTML = '';
+    sb.rpc('dias_disponiveis', { p_servicos: idsEscolhidos(), p_barbeiro_id: eu.barbeiro_id }).then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      fita.innerHTML = '';
+      var lim = limite();
+      r.data.forEach(function (d) {
+        var dia = el('button','dia'); dia.type = 'button'; dia.setAttribute('aria-pressed','false');
+        var dt = deIso(d.dia);
+        dia.appendChild(el('span','sem', SEM3[dt.getDay()])); dia.appendChild(el('span','num', String(dt.getDate()))); dia.appendChild(el('span','mes', MESES[dt.getMonth()].slice(0,3)));
+        dia.disabled = !d.vagas || d.dia >= lim;
+        if (d.dia >= lim && d.vagas) dia.title = 'Esse dia cai no próximo mês do plano';
+        dia.addEventListener('click', function () {
+          Array.prototype.forEach.call(fita.children, function (x) { x.setAttribute('aria-pressed', x === dia ? 'true' : 'false'); });
+          escolha.dia = d.dia; pintaHoras();
+        });
+        fita.appendChild(dia);
+      });
+      if (r.data.some(function (d) { return d.dia >= lim && d.vagas; }))
+        fita.parentNode.insertBefore(Object.assign(el('p','pg-regras','Dias a partir de ' + dataBR(lim) + ' liberam quando a mensalidade seguinte for paga.'), { id: 'aviso-lim' }), fita.nextSibling);
+    }).catch(function (e) { aviso(fita, 'aviso-erro', e.message); });
+  }
+
+  function pintaHoras() {
+    var cx = $('#mc-horas'); cx.innerHTML = '<div class="carregando">Carregando horários…</div>'; $('#mc-confirma').innerHTML = '';
+    sb.rpc('slots_disponiveis', { p_data: escolha.dia, p_servicos: idsEscolhidos(), p_barbeiro_id: eu.barbeiro_id }).then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      cx.innerHTML = '';
+      if (!r.data.length) return aviso(cx, 'aviso-neutro', 'Esse dia lotou. Escolha outro.');
+      var g = el('div','grade-horas');
+      r.data.map(hhmm).forEach(function (h) {
+        var b = el('button','hora', h); b.type = 'button';
+        b.addEventListener('click', function () { confirmaHorario(h); });
+        g.appendChild(b);
+      });
+      cx.appendChild(g);
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+  }
+
+  function confirmaHorario(h) {
+    var cx = $('#mc-confirma'); cx.innerHTML = '';
+    var box = el('div','resumo'); box.style.marginTop = '1.2rem';
+    box.appendChild(el('p', null, porExtenso(escolha.dia) + ' às ' + h + ' com ' + eu.barbeiro));
+    box.appendChild(el('p', 'sub', escolha.servicos.map(function (s) { return s.nome; }).join(' + ') + ' · pelo plano, sem sinal'));
+    var ac = el('div','acoes');
+    var b = el('button','btn btn-ouro','Confirmar horário'); b.type = 'button';
+    b.addEventListener('click', function () {
+      b.disabled = true; b.textContent = 'Confirmando…';
+      sb.rpc('agendar_pelo_plano', { p_servicos: idsEscolhidos(), p_data: escolha.dia, p_inicio: h }).then(function (r) {
+        if (r.error) throw new Error(erroDe(r));
+        funcao('confirmado', { agendamento_id: r.data[0].id }).catch(function () {});
+        return carregaConta().then(function () {
+          aviso($('#msg-conta'), 'aviso-ok', 'Horário confirmado: ' + porExtenso(escolha.dia) + ' às ' + h + '. Mandamos a confirmação por e-mail.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }).catch(function (e) { b.disabled = false; b.textContent = 'Confirmar horário'; aviso(cx, 'aviso-erro', e.message); });
+    });
+    ac.appendChild(b); box.appendChild(ac); cx.appendChild(box);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function pintaHorarios() {
+    var cx = $('#meus-horarios'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
+    sb.rpc('meus_horarios').then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      cx.innerHTML = '';
+      if (!r.data.length) return cx.appendChild(el('p','vazio','Nenhum horário marcado.'));
+      r.data.forEach(function (a) {
+        var item = el('div','agenda-item');
+        var hr = el('div','agenda-hora', hhmm(a.inicio)); hr.appendChild(el('small', null, 'até ' + hhmm(a.fim))); item.appendChild(hr);
+        var corpo = el('div','agenda-corpo');
+        corpo.appendChild(el('strong', null, porExtenso(a.dia)));
+        corpo.appendChild(el('span', null, a.servico + ' com ' + a.barbeiro + ' · código ' + a.codigo));
+        if (a.pode_cancelar) {
+          var ac = el('div','acoes'); ac.style.marginTop = '.5rem';
+          var c = el('button','btn btn-linha mini','Cancelar'); c.type = 'button';
+          c.addEventListener('click', function () {
+            if (c.dataset.certeza !== '1') { c.dataset.certeza = '1'; c.textContent = 'Toque de novo para cancelar'; return; }
+            c.disabled = true;
+            sb.rpc('cancelar_pelo_plano', { p_id: a.id }).then(function (x) {
+              if (x.error) throw new Error(erroDe(x));
+              carregaConta().then(function () { aviso($('#msg-conta'), 'aviso-ok', 'Horário cancelado. O saldo voltou para você.'); });
+            }).catch(function (e) { c.disabled = false; aviso(corpo, 'aviso-erro', e.message); });
+          });
+          ac.appendChild(c); corpo.appendChild(ac);
+        } else corpo.appendChild(el('span','pg-regras','Para cancelar a menos de 1h, fale no WhatsApp.'));
+        item.appendChild(corpo); cx.appendChild(item);
+      });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+  }
+
+  /* ---------------- foto ---------------- */
+  $('#foto-arquivo').addEventListener('change', function () {
+    var arq = this.files && this.files[0], cx = $('#msg-foto');
+    if (!arq) return;
+    aviso(cx, 'aviso-neutro', 'Enviando sua foto…');
+    var img = new Image(), url = URL.createObjectURL(arq);
+    img.onload = function () {
+      var lado = Math.min(img.width, img.height), tam = Math.min(480, lado);
+      var c = document.createElement('canvas'); c.width = c.height = tam;
+      c.getContext('2d').drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, tam, tam);
+      URL.revokeObjectURL(url);
+      c.toBlob(function (blob) {
+        sb.auth.getUser().then(function (u) {
+          var caminho = u.data.user.id + '/foto-' + Date.now() + '.jpg';
+          return sb.storage.from('clientes').upload(caminho, blob, { contentType: 'image/jpeg', upsert: true }).then(function (r) {
+            if (r.error) throw new Error(r.error.message);
+            var pub = sb.storage.from('clientes').getPublicUrl(caminho).data.publicUrl;
+            return sb.rpc('salvar_minha_foto', { p_url: pub });
+          });
+        }).then(function (r) {
+          if (r.error) throw new Error(erroDe(r));
+          return carregaConta().then(function () { aviso(cx, 'aviso-ok', 'Foto salva.'); });
+        }).catch(function (e) { aviso(cx, 'aviso-erro', 'Não consegui salvar a foto: ' + e.message); });
+      }, 'image/jpeg', 0.85);
+    };
+    img.onerror = function () { aviso(cx, 'aviso-erro', 'Esse arquivo não é uma foto que eu consiga abrir. Tente outra.'); };
+    img.src = url;
+    this.value = '';
+  });
+
+  /* ---------------- login e senha ---------------- */
+  $('#abre-link').addEventListener('click', function () {
+    $('#form-link').hidden = false; this.hidden = true;
+    $('#lk-email').value = $('#lg-email').value; $('#lk-email').focus();
+  });
+  $('#form-link').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-link'); aviso(cx, 'aviso-neutro', 'Enviando…');
+    var email = $('#lk-email').value.trim();
+    funcao('acesso', { email: email }).then(function () {
+      aviso(cx, 'aviso-ok', 'Pronto! Se esse e-mail for de um assinante ou da equipe, o link chega em instantes. Olhe também o Spam e a aba Promoções.');
+    }).catch(function () { aviso(cx, 'aviso-erro', 'Não consegui enviar agora. Tente de novo em instantes.'); });
+  });
+  $('#form-senha').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-senha'), s1 = $('#nv-senha').value, s2 = $('#nv-senha2').value;
+    if (s1.length < 8) return aviso(cx, 'aviso-erro', 'A senha precisa ter pelo menos 8 caracteres.');
+    if (s1 !== s2) return aviso(cx, 'aviso-erro', 'As duas senhas não estão iguais.');
+    aviso(cx, 'aviso-neutro', 'Salvando…');
+    sb.auth.updateUser({ password: s1 }).then(function (r) {
+      if (r.error) return aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Peça um link novo na tela de entrada.');
+      cx.innerHTML = ''; carregaConta();
+    });
+  });
+  $('#form-login').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-login'); aviso(cx, 'aviso-neutro', 'Entrando…');
+    sb.auth.signInWithPassword({ email: $('#lg-email').value.trim(), password: $('#lg-senha').value }).then(function (r) {
+      if (r.error) return aviso(cx, 'aviso-erro', 'E-mail ou senha não conferem.');
+      cx.innerHTML = ''; carregaConta();
+    });
+  });
+  $('#btn-sair').addEventListener('click', function () { sb.auth.signOut().then(function () { location.href = 'conta.html'; }); });
+
+  sb.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session;
+    if (s && (tipoLink === 'invite' || tipoLink === 'recovery')) {
+      $('#senha-quem').textContent = 'Acesso de ' + s.user.email + '. Escolha uma senha com pelo menos 8 caracteres.';
+      $('#btn-sair').hidden = false;
+      return mostra('#tela-senha');
+    }
+    if (s) return carregaConta();
+    if (voltaPlano) { mostra('#tela-retorno'); return conferePagamento(0); }
+    mostra('#tela-login');
+    if (erroLink) {
+      aviso($('#msg-login'), 'aviso-erro', 'Esse link expirou ou já foi usado. Peça um novo abaixo: é rapidinho.');
+      $('#abre-link').click();
+    }
+  });
+})();
+</script>
+</body>
+</html>

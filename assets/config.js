@@ -106,11 +106,11 @@ window.TV = {
     { id:'luzes',             nome:'Luzes',                 descricao:'Mechas no tom certo.',                                preco_centavos:10000, a_partir_de:true,  duracao_min:40, categoria:'Química' }
   ],
 
-  // Planos (Fase 2: login do assinante). Por enquanto a vitrine leva ao WhatsApp.
+  // Planos: vitrine de reserva. No ar, os planos (com preço e saldo) vêm da tabela "planos" (db/planos.sql).
   planos: [
     { nome:'Trevus Basic', preco_centavos:11500, itens:['4 cortes por mês'] },
     { nome:'Hyper Trevus', preco_centavos:17000, itens:['4 cortes por mês', '4 barbas por mês'] },
-    { nome:'Mega Trevus',  preco_centavos:23000, itens:['4 cortes por mês', 'Barba', 'Sobrancelha'], destaque:true }
+    { nome:'Mega Trevus',  preco_centavos:23000, itens:['4 cortes por mês', '4 barbas por mês', '4 sobrancelhas por mês'], destaque:true }
   ],
 
   // Trabalhos de cada barbeiro (fotos enviadas pela Trevus em 15/10/2026)

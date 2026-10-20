@@ -66,7 +66,10 @@
       <a href="#local">Onde fica</a>
       <a href="#meu-horario">Meu horário</a>
     </nav>
-    <a class="btn btn-ouro" href="#agendar">Agendar horário</a>
+    <div class="topo-acoes">
+      <a class="btn btn-linha entrar" href="conta.html" aria-label="Entrar: assinantes e equipe">Entrar</a>
+      <a class="btn btn-ouro" href="#agendar">Agendar horário</a>
+    </div>
   </div>
 </header>
 
@@ -199,8 +202,10 @@
   <div class="wrap">
     <p class="olho">Planos mensais</p>
     <h2>Corte em dia, todo mês</h2>
-    <p class="sub">Assinante não paga sinal para marcar. Fale com a gente no WhatsApp para assinar.</p>
+    <p class="sub">Assinante não paga sinal para marcar. Assine aqui no site, no Pix ou no cartão, e acompanhe seu saldo na Área do assinante.</p>
     <div class="planos" id="planos-lista"></div>
+    <div id="plano-compra" hidden></div>
+    <p class="sub" style="margin-top:1.4rem">Já é assinante? <a href="conta.html" style="color:var(--ouro);text-decoration:underline;font-weight:700">Entrar</a></p>
   </div>
 </section>
 
@@ -507,6 +512,7 @@
           <li><a href="#equipe">Equipe</a></li>
           <li><a href="#agendar">Agendar horário</a></li>
           <li><a href="#planos">Planos</a></li>
+          <li><a href="conta.html">Entrar (assinantes e equipe)</a></li>
           <li><a href="#meu-horario">Consultar, remarcar ou cancelar</a></li>
           <li><a href="#local">Como chegar</a></li>
         </ul>
@@ -603,25 +609,6 @@
     });
   }
 
-  // planos (assinatura com login entra na Fase 2; por enquanto, WhatsApp)
-  (function () {
-    var alvo = document.getElementById('planos-lista');
-    (CFG.planos || []).forEach(function (pl) {
-      var c = document.createElement('article');
-      c.className = 'plano' + (pl.destaque ? ' destaque' : '');
-      var h = document.createElement('h3'); h.textContent = pl.nome; c.appendChild(h);
-      var v = document.createElement('p'); v.className = 'plano-preco';
-      v.innerHTML = 'R$ ' + (pl.preco_centavos / 100).toFixed(0) + '<small>/mês</small>'; c.appendChild(v);
-      var ul = document.createElement('ul');
-      pl.itens.concat(['Sem sinal para agendar']).forEach(function (i) { var li = document.createElement('li'); li.textContent = i; ul.appendChild(li); });
-      c.appendChild(ul);
-      var a = document.createElement('a'); a.className = 'btn ' + (pl.destaque ? 'btn-ouro' : 'btn-linha'); a.target = '_blank'; a.rel = 'noopener';
-      a.href = 'https://wa.me/' + CFG.whatsapp + '?text=' + encodeURIComponent('Olá, Trevus! Quero assinar o ' + pl.nome + '.');
-      a.textContent = 'Quero o ' + pl.nome; c.appendChild(a);
-      alvo.appendChild(c);
-    });
-  })();
-
   // trabalhos de cada barbeiro, com filtro
   (function () {
     var alvo = document.getElementById('trabalhos-lista');
@@ -669,5 +656,6 @@
 })();
 </script>
 <script src="assets/agenda.js"></script>
+<script src="assets/planos.js"></script>
 </body>
 </html>

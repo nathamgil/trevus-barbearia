@@ -482,3 +482,10 @@ h3{font-size:1.1rem;letter-spacing:.04em}
 .membro-acoes .btn{padding:.55rem .6rem;font-size:.78rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .membro-acoes .btn-ouro{grid-column:1 / -1;font-size:.86rem}
 .membro-acoes > :only-of-type{grid-column:1 / -1}
+
+/* ---------- v3: compra do plano ---------- */
+.passo-tit{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cinza);font-weight:800;margin:1.2rem 0 .6rem}
+.plano .btn{margin-top:auto}
+.topo-acoes{display:flex;gap:.5rem;align-items:center}
+.topo-acoes .entrar{padding-inline:1rem}
+@media(max-width:520px){ .topo-acoes .btn{font-size:.8rem;padding:.55rem .8rem;min-height:42px} }

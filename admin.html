@@ -110,6 +110,7 @@
       <button class="aba" role="tab" aria-selected="false" data-aba="balcao">Lançar cliente</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="proximos">Próximos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="folgas">Folgas e feriados</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="assinantes">Assinantes</button>
     </div>
 
     <!-- aba: dia -->
@@ -216,6 +217,35 @@
             <div id="msg-feriado"></div>
           </div>
           <div class="cartao" style="margin-top:1rem" id="lista-feriados"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- aba: assinantes -->
+    <section class="painel-aba" data-painel="assinantes">
+      <div class="metricas" id="as-metricas"></div>
+      <div class="dupla" style="align-items:start">
+        <div>
+          <h3>Assinantes</h3>
+          <p class="sub" style="margin-top:.5rem">Quem assinou pelo site ou foi cadastrado aqui. Vencido = mensalidade em aberto: o plano fica travado até pagar.</p>
+          <div class="cartao" style="margin-top:1.2rem" id="lista-assinantes"></div>
+        </div>
+        <div>
+          <h3>Cadastrar quem pagou no balcão</h3>
+          <p class="sub" style="margin-top:.5rem">O plano começa hoje e vence no mesmo dia do mês que vem. O cliente recebe por e-mail o link para criar a senha.</p>
+          <div class="cartao" style="margin-top:1.2rem">
+            <form id="form-assinante">
+              <div class="campos">
+                <div class="campo"><label for="as-plano">Plano</label><select id="as-plano"></select></div>
+                <div class="campo"><label for="as-quem">Barbeiro do plano</label><select id="as-quem"></select></div>
+                <div class="campo"><label for="as-nome">Nome</label><input id="as-nome" type="text" required></div>
+                <div class="campo"><label for="as-tel">WhatsApp</label><input id="as-tel" type="tel" inputmode="numeric" placeholder="(71) 9 0000-0000" required></div>
+                <div class="campo"><label for="as-email">E-mail</label><input id="as-email" type="email" required></div>
+                <button class="btn btn-ouro btn-bloco" type="submit">Cadastrar e mandar o acesso</button>
+              </div>
+            </form>
+            <div id="msg-assinante"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -424,6 +454,7 @@
     if (aba === 'dia') pintaDia();
     if (aba === 'proximos') pintaProximos();
     if (aba === 'folgas') { pintaBloqueios(); pintaFeriados(); }
+    if (aba === 'assinantes') pintaAssinantes();
   }
 
   /* ---------------- sinais a devolver ---------------- */
@@ -508,6 +539,7 @@
       retido: ['tag-fim', 'Sinal retido'],
       devolver: ['tag-off', 'Devolver ' + dinheiro(a.sinal - (a.credito_usado || 0))],
       devolvido: ['tag-fim', 'Sinal devolvido'],
+      plano: ['tag-pago', 'Plano'],
       isento: ['tag-fim', 'Sem sinal']
     })[a.sinal_status] || ['tag-fim', a.sinal_status];
   }
@@ -634,6 +666,114 @@
     }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
   }
 
+  /* ---------------- assinantes (planos) ---------------- */
+
+  var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas' };
+  function dataBR(s){ return String(s).split('-').reverse().join('/'); }
+
+  function convidar(id) {
+    return sb.auth.getSession().then(function (r) {
+      return fetch(CFG.supabaseUrl + '/functions/v1/pagamento?acao=convidar', { method: 'POST',
+        headers: { apikey: CFG.supabaseKey, Authorization: 'Bearer ' + r.data.session.access_token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assinante_id: id }) }).then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.erro || 'Falhou.'); }); });
+    });
+  }
+
+  function pintaAssinantes() {
+    var cx = $('#lista-assinantes');
+    if (DEMO) { cx.innerHTML = ''; return cx.appendChild(el('p','vazio','Os planos funcionam com o site ligado ao banco.')); }
+    cx.innerHTML = '<div class="carregando">Carregando…</div>';
+    sb.rpc('lista_assinantes').then(resp).then(function (lista) {
+      lista = lista.filter(function (a) { return !filtro || a.barbeiro_id === filtro; });
+      var ativos = lista.filter(function (a) { return a.status === 'ativo'; });
+      var vencidos = lista.filter(function (a) { return a.status === 'vencido'; });
+      var logo = ativos.filter(function (a) { return !a.proximo_pago && a.vence_em && (deIso(a.vence_em) - deIso(iso(new Date()))) / 86400000 <= 3; });
+      var m = $('#as-metricas'); m.innerHTML = '';
+      [[ativos.length, 'Ativos'], [vencidos.length, 'Vencidos'], [logo.length, 'Vencem em até 3 dias']].forEach(function (x) {
+        var d = el('div','metrica'); d.appendChild(el('b', null, String(x[0]))); d.appendChild(el('span', null, x[1])); m.appendChild(d);
+      });
+      cx.innerHTML = '';
+      if (!lista.length) return cx.appendChild(el('p','vazio','Nenhum assinante ainda.'));
+      lista.forEach(function (a) {
+        var item = el('div','agenda-item');
+        var foto = el('div','agenda-hora'); foto.style.width = '3.4rem';
+        if (a.foto) { var im = el('img'); im.src = a.foto; im.alt = ''; im.style.cssText = 'width:48px;height:48px;border-radius:50%;object-fit:cover'; foto.appendChild(im); }
+        else foto.textContent = a.nome.charAt(0).toUpperCase();
+        item.appendChild(foto);
+        var corpo = el('div','agenda-corpo');
+        var topo = el('div'); topo.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap';
+        topo.appendChild(el('strong', null, a.nome));
+        if (!filtro) topo.appendChild(el('span','tag tag-barbeiro', a.barbeiro));
+        var st = a.status === 'ativo' ? ['tag-pago', a.proximo_pago ? 'Pago adiantado' : 'Ativo'] : a.status === 'vencido' ? ['tag-off', 'Vencido'] : ['tag-fim', 'Cancelado'];
+        topo.appendChild(el('span','tag ' + st[0], st[1]));
+        corpo.appendChild(topo);
+        var saldo = Object.keys(a.cotas || {}).map(function (k) { return ((a.saldo || {})[k] || 0) + '/' + a.cotas[k] + ' ' + (NOMES_COTA[k] || k); }).join(' · ');
+        corpo.appendChild(el('span', null, a.plano + ' · vence ' + (a.vence_em ? dataBR(a.vence_em) : '—') + (a.status === 'ativo' ? ' · saldo ' + saldo : '')));
+        corpo.appendChild(el('span', null, ' · ' + a.email + (a.tem_acesso ? '' : ' (ainda não criou a senha)')));
+        var acoes = el('div','acoes'); acoes.style.marginTop = '.6rem';
+        var tel = soDigitos(a.telefone);
+        if (tel.length >= 10) {
+          var zap = el('a','btn btn-zap mini','WhatsApp'); zap.target = '_blank'; zap.rel = 'noopener';
+          zap.href = 'https://wa.me/55' + tel.replace(/^55/,'') + '?text=' + encodeURIComponent('Oi ' + a.nome.split(' ')[0] + '! Aqui é da Trevus Barbearia, sobre o seu ' + a.plano + ':');
+          acoes.appendChild(zap);
+        }
+        if (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago)) {
+          var pg = el('button','btn btn-linha mini','Recebi no balcão'); pg.type = 'button';
+          pg.addEventListener('click', function () {
+            confirmar(corpo, 'Confirmar que ' + a.nome + ' pagou a mensalidade do ' + a.plano + ' no balcão? ' +
+              (a.status === 'vencido' ? 'O plano volta a valer a partir de hoje.' : 'O próximo mês fica pago.'), 'Confirmar', function () {
+              sb.rpc('pagamento_balcao', { p_assinante: a.id }).then(resp).then(pintaAssinantes).catch(function (e) { aviso(corpo, 'aviso-erro', e.message); });
+            });
+          });
+          acoes.appendChild(pg);
+        }
+        if (a.status !== 'cancelado') {
+          var cv = el('button','btn btn-linha mini', a.tem_acesso ? 'Mandar link de senha' : 'Reenviar acesso'); cv.type = 'button';
+          cv.addEventListener('click', function () {
+            cv.disabled = true;
+            convidar(a.id).then(function () { aviso(corpo, 'aviso-ok', 'Link enviado para ' + a.email + '.'); })
+              .catch(function (e) { cv.disabled = false; aviso(corpo, 'aviso-erro', e.message); });
+          });
+          acoes.appendChild(cv);
+          var cn = el('button','btn btn-linha mini','Cancelar plano'); cn.type = 'button';
+          cn.addEventListener('click', function () {
+            confirmar(corpo, 'Cancelar o plano de ' + a.nome + '? Ele para de marcar pelo plano e não recebe mais cobrança.', 'Cancelar plano', function () {
+              sb.from('assinantes').update({ status: 'cancelado' }).eq('id', a.id).then(resp).then(pintaAssinantes).catch(function (e) { aviso(corpo, 'aviso-erro', e.message); });
+            });
+          });
+          acoes.appendChild(cn);
+        }
+        corpo.appendChild(acoes);
+        item.appendChild(corpo); cx.appendChild(item);
+      });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
+
+  $('#as-tel').addEventListener('input', function () {
+    var d = soDigitos(this.value).slice(0, 11), out = d;
+    if (d.length > 2) out = '(' + d.slice(0, 2) + ') ' + d.slice(2);
+    if (d.length > 7) out = '(' + d.slice(0, 2) + ') ' + d.slice(2, 3) + ' ' + d.slice(3, 7) + '-' + d.slice(7);
+    this.value = out;
+  });
+  $('#form-assinante').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cx = $('#msg-assinante');
+    if (DEMO) return aviso(cx, 'aviso-erro', 'Os planos funcionam com o site ligado ao banco.');
+    aviso(cx, 'aviso-neutro', 'Cadastrando…');
+    var nome = $('#as-nome').value.trim(), email = $('#as-email').value.trim();
+    sb.rpc('cadastrar_assinante_balcao', { p_plano: $('#as-plano').value, p_barbeiro: $('#as-quem').value,
+      p_nome: nome, p_telefone: $('#as-tel').value, p_email: email })
+      .then(function (r) {
+        if (r.error) throw new Error(r.error.hint || r.error.message);
+        $('#form-assinante').reset(); pintaAssinantes();
+        return convidar(r.data).then(function () {
+          aviso(cx, 'aviso-ok', nome + ' cadastrado. O link para criar a senha foi para ' + email + '.');
+        }, function () {
+          aviso(cx, 'aviso-erro', nome + ' foi cadastrado, mas o e-mail de acesso falhou. Use "Reenviar acesso" na lista.');
+        });
+      }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+  });
+
   /* ---------------- eventos ---------------- */
 
   $('#dia-menos').addEventListener('click', function () { diaAtual.setDate(diaAtual.getDate() - 1); pintaDia(); });
@@ -704,7 +844,19 @@
 
   /* ---------------- partida ---------------- */
 
+  // Cliente de plano também tem login: o painel confere se é da equipe.
   function abrePainel(userId) {
+    (DEMO ? Promise.resolve(true) : sb.rpc('e_socio').then(function (r) { return !!r.data; })).then(function (socio) {
+      if (socio) return entraPainel(userId);
+      $('#tela-senha').hidden = true; $('#tela-painel').hidden = true; $('#tela-login').hidden = false;
+      var cx = $('#msg-login'); cx.innerHTML = '';
+      var d = el('div','aviso aviso-neutro','Essa área é só da equipe. Se você é assinante, entre pela Área do assinante. ');
+      var a = el('a', null, 'Abrir Área do assinante'); a.href = 'conta.html'; a.style.cssText = 'color:var(--ouro);text-decoration:underline;font-weight:700';
+      d.appendChild(a); cx.appendChild(d);
+    });
+  }
+
+  function entraPainel(userId) {
     DADOS.carregar().then(function (r) {
       barbeiros = r[0]; servicos = r[1];
       var eu = barbeiros.filter(function(b){ return userId && b.user_id === userId; })[0];
@@ -726,6 +878,14 @@
       var agora = new Date();
       $('#bc-data').value = iso(agora);
       $('#bc-hora').value = deMinutos(Math.ceil((agora.getHours() * 60 + agora.getMinutes()) / 5) * 5 % 1440);
+
+      var sq = $('#as-quem'); sq.innerHTML = '';
+      barbeiros.forEach(function (b) { var o = el('option', null, b.nome); o.value = b.id; sq.appendChild(o); });
+      if (eu) sq.value = eu.id;
+      if (!DEMO) sb.from('planos').select('id,nome,preco_centavos').eq('ativo', true).order('ordem').then(resp).then(function (l) {
+        var s = $('#as-plano'); s.innerHTML = '';
+        l.forEach(function (p) { var o = el('option', null, p.nome + ' · ' + dinheiro(p.preco_centavos)); o.value = p.id; s.appendChild(o); });
+      }).catch(function(){});
 
       $('#tela-login').hidden = true; $('#tela-senha').hidden = true; $('#tela-painel').hidden = false;
       if (location.hash) history.replaceState(null, '', location.pathname);
