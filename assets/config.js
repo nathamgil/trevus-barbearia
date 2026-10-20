@@ -85,7 +85,7 @@ window.TV = {
       especialidade:'Degradê', anos_profissao:13, frase:'Experiência que transforma técnica em excelência.' }
   ],
 
-  // Alinhamento de 24/09/2026. "ativo:false" = esperando preço da Trevus.
+  // Alinhamento de 24/09/2026, preços pendentes confirmados em 19/10/2026.
   servicosDemo: [
     { id:'corte',             nome:'Corte',                 descricao:'Corte de cabelo e acabamento.',                       preco_centavos:3000,  a_partir_de:false, duracao_min:30, categoria:'Cabelo' },
     { id:'corte-tesoura',     nome:'Corte na tesoura',      descricao:'Todo na tesoura, pra quem quer volume e caimento.',   preco_centavos:3500,  a_partir_de:false, duracao_min:40, categoria:'Cabelo' },
@@ -101,8 +101,9 @@ window.TV = {
     { id:'sobrancelha',       nome:'Sobrancelha',           descricao:'Desenho no ponto, sem exagero.',                      preco_centavos:1500,  a_partir_de:false, duracao_min:10, categoria:'Detalhes' },
     { id:'limpeza-pele',      nome:'Limpeza de pele',       descricao:'Limpeza facial para tirar oleosidade e cravos.',      preco_centavos:2000,  a_partir_de:false, duracao_min:25, categoria:'Cuidados' },
     { id:'freestyle',         nome:'Freestyle',             descricao:'Desenho na lateral, feito à mão. Valor conforme o desenho. Só com o Kelson.', preco_centavos:700, a_partir_de:true, duracao_min:10, categoria:'Detalhes', so_barbeiros:['kelson'] },
-    { id:'nevou',             nome:'Nevou',                 descricao:'Platinado. O valor final pode mudar conforme o tamanho do cabelo.', preco_centavos:12000, a_partir_de:true, duracao_min:30, categoria:'Química' }
-    // PENDENTE: Luzes (40 min) e Remoção de pelos nasais (5 min) entram quando a Trevus passar o preço.
+    { id:'pelos-nasais',      nome:'Remoção de pelos nasais', descricao:'Rápido e sem dor.',                                 preco_centavos:700,   a_partir_de:false, duracao_min:5,  categoria:'Detalhes' },
+    { id:'nevou',             nome:'Nevou',                 descricao:'Platinado. O valor final pode mudar conforme o tamanho do cabelo.', preco_centavos:12000, a_partir_de:true, duracao_min:30, categoria:'Química' },
+    { id:'luzes',             nome:'Luzes',                 descricao:'Mechas no tom certo.',                                preco_centavos:10000, a_partir_de:true,  duracao_min:40, categoria:'Química' }
   ],
 
   // Planos (Fase 2: login do assinante). Por enquanto a vitrine leva ao WhatsApp.

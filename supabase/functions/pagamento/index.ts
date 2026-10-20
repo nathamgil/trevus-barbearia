@@ -81,6 +81,9 @@ async function criarLink(a: any) {
       redirect_url: `${SITE_URL}/?pagamento=${a.id}`,
       webhook_url: `${SB_URL}/functions/v1/pagamento?acao=webhook`,
       customer: { name: a.cliente_nome, email: a.cliente_email, phone_number: `+55${tel.replace(/^55/, "")}` },
+      // Endereço da barbearia (serviço presencial): sem ele o checkout pede o
+      // endereço do cliente antes de mostrar o Pix.
+      address: { cep: "40230680", number: "28" },
     }),
   });
   const corpo = await r.json().catch(() => ({}));

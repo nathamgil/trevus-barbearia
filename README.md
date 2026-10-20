@@ -39,7 +39,9 @@ fotos/                             imagens do site
 | Sem preferência | vai para quem já tem crédito do cliente, depois para quem está com menos clientes |
 | Feriado | 8h–17h (local) ou 8h–12h (nacional), sem almoço |
 | Barbearia desmarca em cima da hora | sinal devolvido + 10% no próximo horário do cliente |
-| Freestyle | só com o Kelson |
+| Freestyle | só com o Kelson, 10 min, a partir de R$ 7 |
+| Luzes | a partir de R$ 100 |
+| Remoção de pelos nasais | R$ 7 |
 
 Expediente: Ter a Sáb 8h–20h com almoço 12h–13h · Dom 8h–12h ·
 **segunda só o Kelson, 14h–20h** · **terça sem o Hariel**.
@@ -132,11 +134,6 @@ Brevo simulados (14 cenários, incluindo webhook falso).
 
 ## Pendências da Trevus
 
-- Preço das **luzes** e da **remoção de pelos nasais** (já cadastrados, desligados)
-- Duração do **freestyle** (provisório: 10 min; só o Kelson faz, a partir de R$ 7)
-- **Regra dos 10%** implementada assim, a confirmar: a barbearia desmarca com menos
-  de 1h (ou o barbeiro falta) -> o sinal é devolvido e o cliente ganha 10% no
-  próximo horário, uma vez, com qualquer barbeiro
 - Mais fotos de trabalhos do **Júnior** (hoje só tem o corte infantil)
 
 ## Fase 2

@@ -768,8 +768,8 @@ insert into public.feriados (data, nome, abre, fecha) values
   ('2027-10-12', 'N. Sra. Aparecida',               '08:00', '12:00')
 on conflict (data) do update set nome = excluded.nome, abre = excluded.abre, fecha = excluded.fecha;
 
--- Serviços (alinhamento de 24/09). Os marcados PENDENTE ainda sem preço
--- confirmado: ficam desligados (ativo = false) até a Trevus responder.
+-- Serviços (alinhamento de 24/09; preços de luzes, pelos nasais e duração do
+-- freestyle confirmados em 19/10).
 insert into public.servicos (slug, nome, descricao, categoria, preco_centavos, a_partir_de, duracao_min, ordem, ativo) values
   ('corte',             'Corte',                'Corte de cabelo e acabamento.',                        'Cabelo',        3000,  false, 30,  1, true),
   ('corte-tesoura',     'Corte na tesoura',     'Todo na tesoura, pra quem quer volume e caimento.',    'Cabelo',        3500,  false, 40,  2, true),
@@ -783,11 +783,11 @@ insert into public.servicos (slug, nome, descricao, categoria, preco_centavos, a
   ('acabamento',        'Acabamento (pé)',      'Aquele retoque entre um corte e outro.',               'Detalhes',      1000,  false, 10, 10, true),
   ('pigmentacao',       'Pigmentação',          'Realça o desenho do corte e da barba.',                'Detalhes',      1500,  false, 15, 11, true),
   ('sobrancelha',       'Sobrancelha',          'Desenho no ponto, sem exagero.',                       'Detalhes',      1500,  false, 10, 12, true),
-  ('pelos-nasais',      'Remoção de pelos nasais', 'Rápido e sem dor.',                                 'Detalhes',      1000,  false,  5, 13, false), -- PENDENTE: preço
+  ('pelos-nasais',      'Remoção de pelos nasais', 'Rápido e sem dor.',                                 'Detalhes',       700,  false,  5, 13, true),
   ('limpeza-pele',      'Limpeza de pele',      'Limpeza facial para tirar oleosidade e cravos.',       'Cuidados',      2000,  false, 25, 14, true),
-  ('freestyle',         'Freestyle',            'Desenho na lateral, feito à mão. Valor conforme o desenho.', 'Detalhes', 700, true, 10, 13, true), -- PENDENTE: duração
+  ('freestyle',         'Freestyle',            'Desenho na lateral, feito à mão. Valor conforme o desenho.', 'Detalhes', 700, true, 10, 13, true),
   ('nevou',             'Nevou',                'Platinado. O valor final pode mudar conforme o tamanho do cabelo.', 'Química', 12000, true, 30, 15, true),
-  ('luzes',             'Luzes',                'Mechas no tom certo.',                                 'Química',       8000,  true,  40, 16, false)  -- PENDENTE: preço
+  ('luzes',             'Luzes',                'Mechas no tom certo.',                                 'Química',      10000,  true,  40, 16, true)
 on conflict (slug) do update set
   nome = excluded.nome, descricao = excluded.descricao, categoria = excluded.categoria,
   preco_centavos = excluded.preco_centavos, a_partir_de = excluded.a_partir_de,
