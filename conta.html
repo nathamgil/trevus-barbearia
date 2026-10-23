@@ -132,7 +132,7 @@
     <h2>Marcar horário pelo plano</h2>
     <div class="cartao">
       <p class="sub" style="margin:0" id="marcar-dica"></p>
-      <p class="passo-tit">1. Serviços</p>
+      <p class="passo-tit" id="mc-tit-servicos">1. Serviços</p>
       <div class="lista-escolha" id="mc-servicos"></div>
       <div id="mc-etapa-dia" hidden>
         <p class="passo-tit">2. Dia</p>
@@ -289,6 +289,18 @@
   function pintaSaldo() {
     var cx = $('#saldos'); cx.innerHTML = '';
     $('#bloco-saldo').hidden = eu.status !== 'ativo';
+    if (eu.pacote && eu.pacote.length) {
+      var ks = Object.keys(eu.cotas || {});
+      var tot = Math.min.apply(null, ks.map(function (k) { return eu.cotas[k]; }));
+      var rest = Math.min.apply(null, ks.map(function (k) { return (eu.saldo || {})[k] || 0; }));
+      var bx = el('div','saldo');
+      bx.appendChild(el('span', null, 'Atendimentos'));
+      bx.appendChild(el('b', null, String(rest)));
+      bx.appendChild(el('small', null, 'de ' + tot + ' no mês'));
+      var tr = el('div','trilho'), ib = el('i'); ib.style.width = Math.round(rest / tot * 100) + '%'; tr.appendChild(ib); bx.appendChild(tr);
+      cx.appendChild(bx);
+      return;
+    }
     Object.keys(eu.cotas || {}).forEach(function (k) {
       var total = eu.cotas[k], resta = (eu.saldo || {})[k] || 0, nome = NOMES_COTA[k] || [k, k];
       var s = el('div','saldo');
@@ -308,7 +320,8 @@
     var bloco = $('#bloco-marcar');
     bloco.hidden = eu.status !== 'ativo';
     if (bloco.hidden) return;
-    $('#marcar-dica').textContent = 'Com o ' + eu.barbeiro + ', sem sinal. O que não está no plano você marca pelo agendamento normal do site.';
+    $('#marcar-dica').textContent = 'Com o ' + eu.barbeiro + ', sem sinal. ' + (eu.pacote && eu.pacote.length
+      ? 'Cada horário usa 1 atendimento do mês.' : 'O que não está no plano você marca pelo agendamento normal do site.');
     escolha = { servicos: [], dia: null };
     $('#mc-etapa-dia').hidden = true; $('#mc-confirma').innerHTML = '';
     var cx = $('#mc-servicos'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
@@ -318,6 +331,17 @@
       if (r.error) throw new Error(erroDe(r));
       servicos = r.data;
       cx.innerHTML = '';
+      if (eu.pacote && eu.pacote.length) {
+        escolha.servicos = servicos.filter(function (s) { return eu.pacote.indexOf(s.id) >= 0; });
+        var dur = escolha.servicos.reduce(function (t, s) { return t + s.duracao_min; }, 0);
+        var card = el('div','opcao'); card.setAttribute('aria-pressed','true'); card.style.cursor = 'default';
+        var tx = el('span'); tx.appendChild(el('strong', null, escolha.servicos.map(function (s) { return s.nome; }).join(' + ')));
+        tx.appendChild(el('span', null, dur + ' min · tudo no mesmo horário'));
+        card.appendChild(tx); cx.appendChild(card);
+        $('#mc-tit-servicos').textContent = '1. Seu atendimento do plano';
+        pintaDias();
+        return;
+      }
       servicos.filter(cobre).filter(function (s) { return !s.so_barbeiros || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
         .forEach(function (s) {
           var bt = el('button','opcao opcao-multi'); bt.type = 'button'; bt.setAttribute('aria-pressed','false');

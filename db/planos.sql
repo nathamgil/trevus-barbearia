@@ -15,6 +15,9 @@
 --    · O saldo renova a cada ciclo. Horário cancelado devolve o saldo;
 --      falta ("Não veio") conta como usado.
 --    · A barbearia também cadastra assinante que pagou no balcão.
+--    · (23/10) Cada plano marca o PACOTE inteiro de uma vez (Basic = corte,
+--      Hyper = corte e barba, Mega = corte e barba + sobrancelha). O
+--      cliente não escolhe serviço avulso pelo plano.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -87,6 +90,9 @@ create table if not exists public.planos (
 
 -- nulo = o plano não cobre esse serviço
 alter table public.servicos add column if not exists consome jsonb;
+
+-- serviços que o plano marca juntos, sempre (nulo = cliente escolhe)
+alter table public.planos add column if not exists pacote uuid[];
 
 -- ---------------------------------------------------------------------
 -- 2. ASSINANTES e PAGAMENTOS DO PLANO
@@ -329,10 +335,11 @@ $$;
 -- ---------------------------------------------------------------------
 -- 6. ÁREA DO ASSINANTE (cliente logado)
 -- ---------------------------------------------------------------------
+drop function if exists public.meu_plano();
 create or replace function public.meu_plano()
 returns table (id uuid, nome text, email text, telefone text, foto text, status text, ciclo_inicio date, vence_em date,
                proximo_pago boolean, plano text, plano_preco integer, cotas jsonb, saldo jsonb,
-               barbeiro_id uuid, barbeiro text, barbeiro_foto text, socio boolean)
+               barbeiro_id uuid, barbeiro text, barbeiro_foto text, socio boolean, pacote uuid[])
 language plpgsql volatile security definer set search_path = public as $$
 #variable_conflict use_column
 declare v_id uuid;
@@ -343,7 +350,7 @@ begin
     select a.id, a.nome, a.email, a.telefone, a.foto, a.status, a.ciclo_inicio, a.vence_em, a.proximo_pago,
            p.nome, p.preco_centavos, p.cotas,
            case when a.status = 'ativo' then public.saldo_plano(a.id) else '{}'::jsonb end,
-           b.id, b.nome, b.foto, public.e_socio()
+           b.id, b.nome, b.foto, public.e_socio(), p.pacote
       from public.assinantes a
       join public.planos p on p.id = a.plano_id
       join public.barbeiros b on b.id = a.barbeiro_id
@@ -384,6 +391,7 @@ begin
     raise exception 'FORA_DO_CICLO' using hint = 'Esse dia já cai no próximo mês do plano. Pague a mensalidade para liberar.';
   end if;
   select * into p from public.planos where id = a.plano_id;
+  if p.pacote is not null then p_servicos := p.pacote; end if;   -- o plano marca o pacote inteiro
 
   for s in select * from public.servicos sv where sv.ativo and sv.id = any(p_servicos) loop
     if s.consome is null then
@@ -591,3 +599,11 @@ update public.servicos set consome = case slug
     when 'barba'         then '{"barba":1}'::jsonb
     when 'sobrancelha'   then '{"sobrancelha":1}'::jsonb
   end;
+
+update public.planos p set pacote = array(
+    select sv.id from public.servicos sv
+     where sv.slug = any(case p.slug when 'basic' then array['corte']
+                                     when 'hyper' then array['corte-barba']
+                                     when 'mega'  then array['corte-barba','sobrancelha'] end)
+     order by sv.ordem)
+ where p.slug in ('basic','hyper','mega');

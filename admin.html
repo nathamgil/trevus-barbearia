@@ -142,6 +142,8 @@
             <div class="campos">
               <div class="campo"><label for="bc-quem">Barbeiro</label><select id="bc-quem"></select></div>
               <div class="campo"><label>Serviços</label><div class="servicos-check" id="bc-servicos"></div></div>
+              <div class="campo"><label for="bc-dur">Duração (min)</label><input id="bc-dur" type="number" inputmode="numeric" min="5" max="480" step="5" placeholder="Soma dos serviços">
+                <small style="color:var(--cinza);font-size:.82rem">Já vem com a soma dos serviços. Mude se esse cliente precisar de menos (ou mais) tempo.</small></div>
               <div style="display:flex;gap:.6rem">
                 <div class="campo" style="flex:1"><label for="bc-data">Dia</label><input id="bc-data" type="date" required></div>
                 <div class="campo" style="flex:1"><label for="bc-hora">Início</label><input id="bc-hora" type="time" step="300" required></div>
@@ -302,14 +304,14 @@
   function normalizaDemo(a){
     return { id:a.id||a.codigo, codigo:a.codigo, barbeiro_id:a.barbeiro_id, barbeiro:a.barbeiro, servico:a.servico,
       preco:a.preco_centavos, sinal:a.sinal_centavos||0, credito_usado:a.credito_usado||0, sinal_status:a.sinal_status||'isento', origem:a.origem||'site',
-      nome:a.nome, telefone:a.telefone, email:a.email, dia:a.dia, inicio:a.inicio, fim:a.fim, obs:a.obs,
+      nome:a.nome, telefone:a.telefone, email:a.email, dia:a.dia, inicio:a.inicio, fim:a.fim, obs:a.obs, dur:a.duracao_min,
       status:a.status, expira_em:a.expira_em, pagamento:a.pagamento||null };
   }
   function normalizaReal(a){
     return { id:a.id, codigo:a.codigo, barbeiro_id:a.barbeiro_id, barbeiro:a.barbeiro_nome, servico:a.servico_nome,
       preco:a.preco_centavos, sinal:a.sinal_centavos, credito_usado:a.credito_usado||0, sinal_status:a.sinal_status, origem:a.origem,
       nome:a.cliente_nome, telefone:a.cliente_telefone, email:a.cliente_email, dia:a.data,
-      inicio:hhmm(a.inicio), fim:hhmm(a.fim), obs:a.observacao, status:a.status, expira_em:a.expira_em, pagamento:a.pagamento };
+      inicio:hhmm(a.inicio), fim:hhmm(a.fim), obs:a.observacao, status:a.status, expira_em:a.expira_em, pagamento:a.pagamento, dur:a.duracao_min };
   }
   function ordena(l){ return l.sort(function(a,b){ return (a.dia+a.inicio) < (b.dia+b.inicio) ? -1 : 1; }); }
   function resp(r){ if (r.error) throw r.error; return r.data; }
@@ -350,6 +352,14 @@
       }
       return sb.from('agendamentos').update(campos).eq('id', a.id).then(resp);
     },
+    // dia, hora e duração ajustados à mão pelo barbeiro
+    editar: function (a, dia, inicio, dur) {
+      var fim = deMinutos(minutos(inicio) + dur);
+      if (DEMO) return DADOS.mudar(a, { dia: dia, inicio: inicio, fim: fim, duracao_min: dur });
+      return sb.from('agendamentos').update({ data: dia, inicio: inicio, fim: fim, duracao_min: dur }).eq('id', a.id).then(function (r) {
+        if (r.error) throw new Error(/sem_choque|exclusion/i.test(r.error.message) ? 'Esse barbeiro já tem cliente nesse horário. Escolha outro horário ou uma duração menor.' : r.error.message);
+      });
+    },
     // a regra (devolver sinal, crédito, 10% em cima da hora) mora no banco
     desmarcar: function (a) {
       if (!DEMO) return sb.rpc('desmarcar_pela_barbearia', { p_id: a.id }).then(resp);
@@ -372,7 +382,7 @@
     },
     lancarBalcao: function (b) {
       var codigo = Math.random().toString(16).slice(2,8).toUpperCase();
-      var dur = b.servicos.reduce(function(t,s){ return t + s.duracao_min; }, 0);
+      var dur = b.dur || b.servicos.reduce(function(t,s){ return t + s.duracao_min; }, 0);
       var reg = {
         codigo: codigo, barbeiro_id: b.barbeiro.id, barbeiro_nome: b.barbeiro.nome,
         servicos: b.servicos.map(function(s){ return { id:s.id, nome:s.nome, preco_centavos:s.preco_centavos, duracao_min:s.duracao_min }; }),
@@ -475,7 +485,8 @@
 
   /* ---------------- agenda ---------------- */
 
-  var diaAtual = new Date();
+  var diaAtual = new Date(), mostrarOcultos = false;
+  function oculto(a) { return a.status === 'cancelado' || a.status === 'expirado' || (a.status === 'aguardando_pagamento' && !vivo(a)); }
 
   function expedienteDe(barbeiroId, d) {
     var b = barbeiroPorId(barbeiroId); if (!b) return null;
@@ -506,13 +517,22 @@
         }).join(' · ');
       }
       cx.innerHTML = '';
-      if (!lista.length) {
+      var escondidos = lista.filter(oculto);
+      var visiveis = mostrarOcultos ? lista : lista.filter(function (a) { return !oculto(a); });
+      if (!visiveis.length) {
         var v = el('div','vazio');
         v.appendChild(el('b', null, 'Agenda vazia'));
         v.appendChild(el('p', null, 'Nenhum cliente marcado para esse dia ainda.'));
-        return cx.appendChild(v);
+        cx.appendChild(v);
       }
-      lista.forEach(function (a) { cx.appendChild(linhaAgendamento(a, function(){ atualizaTudo(); })); });
+      visiveis.forEach(function (a) { cx.appendChild(linhaAgendamento(a, function(){ atualizaTudo(); })); });
+      if (escondidos.length) {
+        var t = el('button','voltar', mostrarOcultos ? 'Esconder cancelados e Pix não pagos'
+          : 'Ver ' + escondidos.length + (escondidos.length === 1 ? ' cancelado ou Pix não pago' : ' cancelados ou Pix não pagos'));
+        t.type = 'button'; t.style.marginTop = '.6rem';
+        t.addEventListener('click', function () { mostrarOcultos = !mostrarOcultos; pintaDia(); });
+        cx.appendChild(t);
+      }
     }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
   }
 
@@ -544,6 +564,52 @@
     })[a.sinal_status] || ['tag-fim', a.sinal_status];
   }
 
+  var SEMANA_LONGA = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  function mensagemConfirmacao(a) {
+    var d = deIso(a.dia), h = String(a.inicio).split(':');
+    var hora = (+h[0]) + 'h' + (h[1] && h[1] !== '00' ? h[1] : '');
+    return 'Olá, ' + a.nome + ' Tudo bem? 👋\n\n' +
+      'Aqui é da Trevus Barbearia 🍀. Estamos entrando em contato a respeito do seu agendamento para ' +
+      SEMANA_LONGA[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()] + ', às ' + hora +
+      ', com o barbeiro ' + (a.barbeiro || nomeDe(a.barbeiro_id)) + '.\n\n' +
+      'Poderia, por gentileza, confirmar se está tudo certo para o seu atendimento?\n\n' +
+      'Agradecemos pela preferência e confiança!\n\n' +
+      'Trevus Barbearia 🍀\nSeu estilo, nossa assinatura.';
+  }
+
+  function formEditar(a, corpo, recarrega) {
+    var velho = corpo.querySelector('.confirma'); if (velho) { velho.remove(); return; }
+    var cx = el('div','confirma');
+    cx.appendChild(el('p', null, 'Ajustar o horário de ' + a.nome));
+    var linha = el('div'); linha.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap';
+    function campo(rot, input) { var c = el('div','campo'); c.style.cssText = 'flex:1;min-width:120px'; c.appendChild(el('label', null, rot)); c.appendChild(input); return c; }
+    var fDia = el('input'); fDia.type = 'date'; fDia.value = a.dia;
+    var fIni = el('input'); fIni.type = 'time'; fIni.step = 300; fIni.value = a.inicio;
+    var fDur = el('input'); fDur.type = 'number'; fDur.min = 5; fDur.max = 480; fDur.step = 5; fDur.inputMode = 'numeric';
+    fDur.value = a.dur || (minutos(a.fim) - minutos(a.inicio));
+    linha.appendChild(campo('Dia', fDia)); linha.appendChild(campo('Início', fIni)); linha.appendChild(campo('Duração (min)', fDur));
+    cx.appendChild(linha);
+    var fimTxt = el('p','sub'); fimTxt.style.margin = '.4rem 0 0';
+    function atualizaFim() { var d = parseInt(fDur.value, 10) || 0; fimTxt.textContent = fIni.value && d ? 'Termina às ' + deMinutos(minutos(fIni.value) + d) : ''; }
+    fIni.addEventListener('input', atualizaFim); fDur.addEventListener('input', atualizaFim); atualizaFim();
+    cx.appendChild(fimTxt);
+    var ac = el('div','acoes'); ac.style.marginTop = '.6rem';
+    var sim = el('button','btn btn-ouro mini','Salvar'); sim.type = 'button';
+    var nao = el('button','voltar','Voltar'); nao.type = 'button';
+    sim.addEventListener('click', function () {
+      var dur = parseInt(fDur.value, 10);
+      if (!fDia.value || !fIni.value) return aviso(fimTxt, 'aviso-erro', 'Escolha o dia e a hora.');
+      if (!(dur >= 5 && dur <= 480)) return aviso(fimTxt, 'aviso-erro', 'A duração vai de 5 a 480 minutos.');
+      if (minutos(fIni.value) + dur > 24 * 60 - 1) return aviso(fimTxt, 'aviso-erro', 'Esse horário passa da meia-noite.');
+      sim.disabled = true;
+      DADOS.editar(a, fDia.value, fIni.value, dur).then(recarrega)
+        .catch(function (e) { sim.disabled = false; aviso(fimTxt, 'aviso-erro', e.message || 'Não consegui salvar.'); });
+    });
+    nao.addEventListener('click', function () { cx.remove(); });
+    ac.appendChild(sim); ac.appendChild(nao); cx.appendChild(ac);
+    corpo.appendChild(cx);
+  }
+
   function linhaAgendamento(a, recarrega) {
     var item = el('div','agenda-item');
     var hora = el('div','agenda-hora', a.inicio);
@@ -567,7 +633,7 @@
     if (soDigitos(a.telefone).length >= 10) {
       var zap = el('a','btn btn-zap mini','WhatsApp');
       zap.href = 'https://wa.me/55' + soDigitos(a.telefone).replace(/^55/,'') + '?text=' +
-        encodeURIComponent('Oi ' + a.nome.split(' ')[0] + '! Aqui é da Trevus Barbearia. Sobre seu horário de ' + porExtenso(a.dia) + ' às ' + a.inicio + ' com ' + a.barbeiro + ':');
+        encodeURIComponent(mensagemConfirmacao(a));
       zap.target = '_blank'; zap.rel = 'noopener'; acoes.appendChild(zap);
     }
 
@@ -586,12 +652,13 @@
         confirmar(corpo, 'Marcar ' + a.nome + ' como falta?' + (pago ? ' O sinal de ' + dinheiro(a.sinal) + ' fica com a barbearia.' : ''), 'Marcar falta',
           function(){ aplica(pago ? { status: 'faltou', sinal_status: 'retido' } : { status: 'faltou' }); });
       });
-      botao('Desmarcar', function(){
+      botao('Editar', function(){ formEditar(a, corpo, recarrega); });
+      botao('Cancelar', function(){
         var tarde = deIso(a.dia).getTime() + minutos(a.inicio) * 60000 < Date.now() + 3600000;
-        var txt = 'A barbearia vai desmarcar ' + a.nome + '.';
+        var txt = 'Cancelar o horário de ' + a.nome + '? Ele sai da agenda e a vaga volta para o site.';
         if (a.sinal_status === 'pago') txt += ' O sinal de ' + dinheiro(a.sinal - (a.credito_usado || 0)) + ' entra na lista para devolver pelo app da InfinitePay.';
         if (tarde && a.origem !== 'balcao') txt += ' Como falta menos de 1h, o cliente ganha 10% de desconto no próximo horário.';
-        confirmar(corpo, txt, 'Desmarcar', function(){
+        confirmar(corpo, txt, 'Cancelar horário', function(){
           DADOS.desmarcar(a).then(recarrega).catch(function(e){ aviso(corpo, 'aviso-erro', e.message || 'Não consegui desmarcar.'); });
         });
       });
@@ -834,10 +901,12 @@
     if (!escolhidos.length) return aviso(cx, 'aviso-erro', 'Marque pelo menos um serviço.');
     if (!$('#bc-data').value || !$('#bc-hora').value) return aviso(cx, 'aviso-erro', 'Escolha o dia e a hora.');
     if ($('#bc-nome').value.trim().length < 2) return aviso(cx, 'aviso-erro', 'Escreva o nome do cliente.');
-    DADOS.lancarBalcao({ barbeiro: b, servicos: escolhidos, data: $('#bc-data').value, hora: $('#bc-hora').value, nome: $('#bc-nome').value.trim(), tel: $('#bc-tel').value })
+    var durBc = parseInt($('#bc-dur').value, 10) || 0;
+    if (durBc && (durBc < 5 || durBc > 480)) return aviso(cx, 'aviso-erro', 'A duração vai de 5 a 480 minutos.');
+    DADOS.lancarBalcao({ barbeiro: b, servicos: escolhidos, data: $('#bc-data').value, hora: $('#bc-hora').value, nome: $('#bc-nome').value.trim(), tel: $('#bc-tel').value, dur: durBc })
       .then(function () {
         aviso(cx, 'aviso-ok', $('#bc-nome').value.trim() + ' lançado na agenda do ' + b.nome + ' às ' + $('#bc-hora').value + '.');
-        $('#bc-nome').value = ''; $('#bc-tel').value = '';
+        $('#bc-nome').value = ''; $('#bc-tel').value = ''; $('#bc-dur').value = '';
         Array.prototype.forEach.call(document.querySelectorAll('#bc-servicos input'), function (i) { i.checked = false; });
       }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Não consegui lançar.'); });
   });
@@ -872,6 +941,11 @@
       var cs = $('#bc-servicos'); cs.innerHTML = '';
       servicos.forEach(function (s) {
         var l = el('label'); var c = el('input'); c.type = 'checkbox'; c.id = 'bc-s-' + s.id;
+        c.addEventListener('change', function () {
+          var soma = servicos.filter(function (x) { var k = document.getElementById('bc-s-' + x.id); return k && k.checked; })
+            .reduce(function (t, x) { return t + x.duracao_min; }, 0);
+          $('#bc-dur').value = soma || '';
+        });
         l.appendChild(c); l.appendChild(document.createTextNode(s.nome + ' · ' + s.duracao_min + ' min'));
         cs.appendChild(l);
       });
