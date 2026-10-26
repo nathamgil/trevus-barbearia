@@ -132,6 +132,10 @@
     <h2>Marcar horário pelo plano</h2>
     <div class="cartao">
       <p class="sub" style="margin:0" id="marcar-dica"></p>
+      <div id="mc-etapa-barbeiro" hidden>
+        <p class="passo-tit">Com quem?</p>
+        <div class="lista-barbeiros" id="mc-barbeiros"></div>
+      </div>
       <p class="passo-tit" id="mc-tit-servicos">1. Serviços</p>
       <div class="lista-escolha" id="mc-servicos"></div>
       <div id="mc-etapa-dia" hidden>
@@ -242,7 +246,10 @@
     var sub = $('#pf-sub'); sub.innerHTML = '';
     sub.appendChild(el('span','tag tag-barbeiro', eu.plano));
     if (eu.barbeiro_foto) { var fb = el('img'); fb.src = eu.barbeiro_foto; fb.alt = ''; sub.appendChild(fb); }
-    sub.appendChild(el('span', null, 'com ' + eu.barbeiro));
+    sub.appendChild(el('span', null, eu.barbeiro_id ? 'com ' + eu.barbeiro : 'com qualquer barbeiro'));
+    if (eu.socio) {
+      var pn = el('a', 'btn btn-linha mini', 'Abrir o painel'); pn.href = 'admin.html'; pn.style.marginLeft = '.3rem'; sub.appendChild(pn);
+    }
   }
 
   function pintaSituacao() {
@@ -250,7 +257,11 @@
     var hoje = iso(new Date());
     var dias = eu.vence_em ? Math.round((deIso(eu.vence_em) - deIso(hoje)) / 86400000) : 0;
     var pagar = null;
-    if (eu.status === 'ativo') {
+    if (eu.status === 'ativo' && eu.cortesia) {
+      cx.classList.add('ok');
+      cx.appendChild(el('b', null, 'Plano de parceria ativo'));
+      cx.appendChild(el('p', null, 'Sem mensalidade: o saldo renova sozinho todo dia ' + deIso(eu.vence_em).getDate() + '. Marque com qualquer barbeiro, sem Pix.'));
+    } else if (eu.status === 'ativo') {
       cx.classList.add('ok');
       if (eu.proximo_pago) {
         cx.appendChild(el('b', null, 'Plano ativo · próximo mês já pago'));
@@ -314,16 +325,41 @@
 
   /* ---------------- marcar pelo plano ---------------- */
   function cobre(s) { return s.consome && Object.keys(s.consome).every(function (k) { return (eu.cotas || {})[k] > 0; }); }
-  function limite() { return eu.proximo_pago ? maisUmMes(eu.vence_em) : eu.vence_em; }
+  function limite() { return eu.proximo_pago || eu.cortesia ? maisUmMes(eu.vence_em) : eu.vence_em; }
+  function barbAtual() { return eu.barbeiro_id || (escolha.barbeiro && escolha.barbeiro.id) || null; }
+  function nomeBarbAtual() { return eu.barbeiro_id ? eu.barbeiro : (escolha.barbeiro ? escolha.barbeiro.nome : ''); }
+
+  function pintaBarbeiros() {
+    var etapa = $('#mc-etapa-barbeiro');
+    etapa.hidden = !!eu.barbeiro_id;
+    if (etapa.hidden) return;
+    var cx = $('#mc-barbeiros'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
+    sb.from('barbeiros').select('id,nome,foto,especialidade,ordem').eq('ativo', true).order('ordem').then(function (r) {
+      if (r.error) throw new Error(erroDe(r));
+      cx.innerHTML = '';
+      r.data.forEach(function (b) {
+        var bt = el('button', 'barbeiro-opcao'); bt.type = 'button'; bt.setAttribute('aria-pressed', 'false');
+        var f = el('span', 'barbeiro-foto'); if (b.foto) { var im = el('img'); im.src = b.foto; im.alt = ''; f.appendChild(im); } bt.appendChild(f);
+        var tx = el('span', 'barbeiro-txt'); tx.appendChild(el('strong', null, b.nome)); tx.appendChild(el('span', null, b.especialidade || '')); bt.appendChild(tx);
+        bt.addEventListener('click', function () {
+          escolha.barbeiro = b; escolha.dia = null; $('#mc-confirma').innerHTML = '';
+          Array.prototype.forEach.call(cx.children, function (x) { x.setAttribute('aria-pressed', x === bt ? 'true' : 'false'); });
+          pintaDias();
+        });
+        cx.appendChild(bt);
+      });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+  }
 
   function pintaMarcar() {
     var bloco = $('#bloco-marcar');
     bloco.hidden = eu.status !== 'ativo';
     if (bloco.hidden) return;
-    $('#marcar-dica').textContent = 'Com o ' + eu.barbeiro + ', sem sinal. ' + (eu.pacote && eu.pacote.length
+    $('#marcar-dica').textContent = (eu.barbeiro_id ? 'Com o ' + eu.barbeiro : 'Com o barbeiro que você escolher') + ', sem sinal. ' + (eu.pacote && eu.pacote.length
       ? 'Cada horário usa 1 atendimento do mês.' : 'O que não está no plano você marca pelo agendamento normal do site.');
-    escolha = { servicos: [], dia: null };
+    escolha = { servicos: [], dia: null, barbeiro: null };
     $('#mc-etapa-dia').hidden = true; $('#mc-confirma').innerHTML = '';
+    pintaBarbeiros();
     var cx = $('#mc-servicos'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
     (servicos.length ? Promise.resolve({ data: servicos }) :
       sb.from('servicos').select('id,nome,duracao_min,consome,so_barbeiros,ordem').eq('ativo', true).order('ordem')
@@ -342,7 +378,7 @@
         pintaDias();
         return;
       }
-      servicos.filter(cobre).filter(function (s) { return !s.so_barbeiros || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
+      servicos.filter(cobre).filter(function (s) { return !s.so_barbeiros || !eu.barbeiro_id || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
         .forEach(function (s) {
           var bt = el('button','opcao opcao-multi'); bt.type = 'button'; bt.setAttribute('aria-pressed','false');
           bt.appendChild(el('span','caixinha'));
@@ -364,10 +400,10 @@
   function pintaDias() {
     var etapa = $('#mc-etapa-dia'), velho = $('#aviso-lim');
     if (velho) velho.remove();
-    etapa.hidden = !escolha.servicos.length;
+    etapa.hidden = !escolha.servicos.length || !barbAtual();
     if (etapa.hidden) return;
     var fita = $('#mc-dias'); fita.innerHTML = '<div class="carregando">Procurando dias livres…</div>'; $('#mc-horas').innerHTML = '';
-    sb.rpc('dias_disponiveis', { p_servicos: idsEscolhidos(), p_barbeiro_id: eu.barbeiro_id }).then(function (r) {
+    sb.rpc('dias_disponiveis', { p_servicos: idsEscolhidos(), p_barbeiro_id: barbAtual() }).then(function (r) {
       if (r.error) throw new Error(erroDe(r));
       fita.innerHTML = '';
       var lim = limite();
@@ -390,7 +426,7 @@
 
   function pintaHoras() {
     var cx = $('#mc-horas'); cx.innerHTML = '<div class="carregando">Carregando horários…</div>'; $('#mc-confirma').innerHTML = '';
-    sb.rpc('slots_disponiveis', { p_data: escolha.dia, p_servicos: idsEscolhidos(), p_barbeiro_id: eu.barbeiro_id }).then(function (r) {
+    sb.rpc('slots_disponiveis', { p_data: escolha.dia, p_servicos: idsEscolhidos(), p_barbeiro_id: barbAtual() }).then(function (r) {
       if (r.error) throw new Error(erroDe(r));
       cx.innerHTML = '';
       if (!r.data.length) return aviso(cx, 'aviso-neutro', 'Esse dia lotou. Escolha outro.');
@@ -407,13 +443,13 @@
   function confirmaHorario(h) {
     var cx = $('#mc-confirma'); cx.innerHTML = '';
     var box = el('div','resumo'); box.style.marginTop = '1.2rem';
-    box.appendChild(el('p', null, porExtenso(escolha.dia) + ' às ' + h + ' com ' + eu.barbeiro));
+    box.appendChild(el('p', null, porExtenso(escolha.dia) + ' às ' + h + ' com ' + nomeBarbAtual()));
     box.appendChild(el('p', 'sub', escolha.servicos.map(function (s) { return s.nome; }).join(' + ') + ' · pelo plano, sem sinal'));
     var ac = el('div','acoes');
     var b = el('button','btn btn-ouro','Confirmar horário'); b.type = 'button';
     b.addEventListener('click', function () {
       b.disabled = true; b.textContent = 'Confirmando…';
-      sb.rpc('agendar_pelo_plano', { p_servicos: idsEscolhidos(), p_data: escolha.dia, p_inicio: h }).then(function (r) {
+      sb.rpc('agendar_pelo_plano', { p_servicos: idsEscolhidos(), p_data: escolha.dia, p_inicio: h, p_barbeiro: barbAtual() }).then(function (r) {
         if (r.error) throw new Error(erroDe(r));
         funcao('confirmado', { agendamento_id: r.data[0].id }).catch(function () {});
         return carregaConta().then(function () {

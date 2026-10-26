@@ -438,6 +438,7 @@ Deno.serve(async (req) => {
       if (!(await eSocio(req))) return json({ erro: "Só a equipe pode mandar o acesso." }, 403);
       const a = (await banco(`assinantes?id=eq.${encodeURIComponent(corpo.assinante_id)}&select=*`))?.[0];
       if (!a) return json({ erro: "Assinante não encontrado." }, 404);
+      if (!a.email) return json({ erro: "Cadastre o e-mail do cliente antes de mandar o acesso." }, 400);
       await enviarAcesso(a, a.user_id ? "pedido" : "novo");
       return json({ ok: true });
     }

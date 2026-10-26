@@ -38,6 +38,17 @@
   .servicos-check input{width:18px;height:18px;accent-color:var(--ouro)}
   .confirma{margin-top:.6rem;padding:.8rem 1rem;border:1px solid var(--borda);border-radius:12px;background:var(--musgo)}
   .confirma p{font-size:.9rem;margin-bottom:.5rem}
+  .mt-barbeiros{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.8rem;margin-top:1rem}
+  .mt-card{background:var(--mata);border:1px solid var(--borda);border-radius:16px;padding:1rem 1.1rem}
+  .mt-card header{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem}
+  .mt-card header img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 22%}
+  .mt-card header b{font-family:var(--display);font-size:1.2rem}
+  .mt-linha{display:flex;justify-content:space-between;gap:1rem;padding:.35rem 0;border-bottom:1px solid var(--borda);font-size:.92rem}
+  .mt-linha:last-child{border-bottom:0}
+  .mt-linha span{color:var(--cinza)} .mt-linha b{font-variant-numeric:tabular-nums}
+  .mt-tabela{width:100%;border-collapse:collapse;font-size:.88rem;min-width:560px}
+  .mt-tabela th{text-align:left;color:var(--cinza);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .4rem;border-bottom:1px solid var(--borda)}
+  .mt-tabela td{padding:.55rem .4rem;border-bottom:1px solid var(--borda);vertical-align:top}
 </style>
 </head>
 <body>
@@ -111,6 +122,7 @@
       <button class="aba" role="tab" aria-selected="false" data-aba="proximos">Próximos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="folgas">Folgas e feriados</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="assinantes">Assinantes</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="master" id="aba-master" hidden>Visão geral</button>
     </div>
 
     <!-- aba: dia -->
@@ -221,6 +233,26 @@
           <div class="cartao" style="margin-top:1rem" id="lista-feriados"></div>
         </div>
       </div>
+    </section>
+
+    <!-- aba: visão geral (painel master, só gestor) -->
+    <section class="painel-aba" data-painel="master">
+      <div class="filtro" id="mt-periodo" aria-label="Período">
+        <button type="button" class="todos" data-p="hoje">Hoje</button>
+        <button type="button" class="todos" data-p="7">Últimos 7 dias</button>
+        <button type="button" class="todos" data-p="mes" aria-pressed="true">Este mês</button>
+        <button type="button" class="todos" data-p="mespassado">Mês passado</button>
+        <button type="button" class="todos" data-p="prox">Próximos 15 dias</button>
+      </div>
+      <p class="sub" id="mt-titulo" style="margin-top:0"></p>
+      <div class="metricas" id="mt-total"></div>
+      <div class="mt-barbeiros" id="mt-barbeiros"></div>
+      <h3 style="margin-top:2rem">Pix não pago (pra chamar no WhatsApp)</h3>
+      <div class="cartao" style="margin-top:1rem" id="mt-abandonos"></div>
+      <h3 style="margin-top:2rem">Assinantes no período</h3>
+      <div class="cartao" style="margin-top:1rem" id="mt-assinantes"></div>
+      <h3 style="margin-top:2rem">Todos os agendamentos do período</h3>
+      <div class="cartao" style="margin-top:1rem;overflow-x:auto" id="mt-agendamentos"></div>
     </section>
 
     <!-- aba: assinantes -->
@@ -465,6 +497,7 @@
     if (aba === 'proximos') pintaProximos();
     if (aba === 'folgas') { pintaBloqueios(); pintaFeriados(); }
     if (aba === 'assinantes') pintaAssinantes();
+    if (aba === 'master') pintaMaster();
   }
 
   /* ---------------- sinais a devolver ---------------- */
@@ -733,6 +766,108 @@
     }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
   }
 
+  /* ---------------- visão geral (painel master) ---------------- */
+
+  var periodo = 'mes';
+  function faixaPeriodo() {
+    var h = new Date(), ini = new Date(h), fim = new Date(h), rot;
+    if (periodo === 'hoje') rot = 'Hoje';
+    else if (periodo === '7') { ini.setDate(h.getDate() - 6); rot = 'Últimos 7 dias'; }
+    else if (periodo === 'mes') { ini = new Date(h.getFullYear(), h.getMonth(), 1); fim = new Date(h.getFullYear(), h.getMonth() + 1, 0); rot = 'Este mês'; }
+    else if (periodo === 'mespassado') { ini = new Date(h.getFullYear(), h.getMonth() - 1, 1); fim = new Date(h.getFullYear(), h.getMonth(), 0); rot = 'Mês passado'; }
+    else { fim.setDate(h.getDate() + 15); rot = 'Próximos 15 dias'; }
+    return { ini: iso(ini), fim: iso(fim), rot: rot };
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#mt-periodo button'), function (b) {
+    b.addEventListener('click', function () {
+      periodo = b.getAttribute('data-p');
+      Array.prototype.forEach.call(document.querySelectorAll('#mt-periodo button'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      pintaMaster();
+    });
+  });
+
+  var ROT_STATUS = { confirmado: 'Marcado', concluido: 'Atendido', faltou: 'Não veio', cancelado: 'Cancelado', pix_abandonado: 'Pix não pago', aguardando_pagamento: 'Pagando agora' };
+
+  function pintaMaster() {
+    if (!GESTOR) return;
+    var f = faixaPeriodo();
+    $('#mt-titulo').textContent = f.rot + ' · ' + dataBR(f.ini) + (f.fim !== f.ini ? ' a ' + dataBR(f.fim) : '');
+    var cards = $('#mt-barbeiros'); cards.innerHTML = '<div class="carregando">Carregando…</div>';
+    sb.rpc('painel_master', { p_ini: f.ini, p_fim: f.fim }).then(resp).then(function (d) {
+      var bs = d.barbeiros || [];
+      function soma(k) { return bs.reduce(function (t, b) { return t + (b[k] || 0); }, 0); }
+      var tot = $('#mt-total'); tot.innerHTML = '';
+      [[soma('marcados'), 'Agendamentos'], [dinheiro(soma('faturamento')), 'Faturamento (serviços)'], [dinheiro(soma('receita_planos')), 'Planos pagos no site'],
+       [soma('pelo_plano'), 'Atendimentos de plano'], [soma('faltas'), 'Faltas'], [soma('pix_abandonados'), 'Pix não pago']].forEach(function (x) {
+        var m = el('div','metrica'); m.appendChild(el('b', null, String(x[0]))); m.appendChild(el('span', null, x[1])); tot.appendChild(m);
+      });
+      cards.innerHTML = '';
+      bs.forEach(function (b) {
+        var c = el('article','mt-card'), h = el('header');
+        if (b.foto) { var im = el('img'); im.src = b.foto; im.alt = ''; h.appendChild(im); }
+        h.appendChild(el('b', null, b.nome)); c.appendChild(h);
+        [['Agendamentos', b.marcados], ['Atendidos (marcados como atendido)', b.atendidos], ['Faltas', b.faltas], ['Cancelados', b.cancelados],
+         ['Pix não pago', b.pix_abandonados], ['Pelo plano', b.pelo_plano], ['Balcão', b.balcao], ['Faturamento (serviços)', dinheiro(b.faturamento)],
+         ['Sinais recebidos', dinheiro(b.sinais)], ['Assinantes ativos', b.assinantes_ativos], ['Assinantes vencidos', b.assinantes_vencidos],
+         ['Planos pagos no site', dinheiro(b.receita_planos)]].forEach(function (x) {
+          var l = el('div','mt-linha'); l.appendChild(el('span', null, x[0])); l.appendChild(el('b', null, String(x[1]))); c.appendChild(l);
+        });
+        cards.appendChild(c);
+      });
+
+      var ab = $('#mt-abandonos'); ab.innerHTML = '';
+      var abandonos = (d.agendamentos || []).filter(function (a) { return a.status === 'pix_abandonado'; });
+      if (!abandonos.length) ab.appendChild(el('p','vazio','Ninguém deixou o Pix sem pagar nesse período.'));
+      abandonos.forEach(function (a) {
+        var l = el('div','agenda-item'), c = el('div','agenda-corpo');
+        c.appendChild(el('strong', null, a.nome));
+        c.appendChild(el('span', null, ' · ' + a.barbeiro + ' · ' + a.servico + ' · ' + dataBR(a.data) + ' ' + a.inicio));
+        var tel = soDigitos(a.telefone);
+        if (tel.length >= 10) {
+          var z = el('a','btn btn-zap mini','Chamar no WhatsApp'); z.target = '_blank'; z.rel = 'noopener'; z.style.marginTop = '.4rem';
+          z.href = 'https://wa.me/55' + tel.replace(/^55/,'') + '?text=' + encodeURIComponent('Olá, ' + a.nome + '! Aqui é da Trevus Barbearia 🍀. Vimos que você começou a marcar um horário com o ' + a.barbeiro + ' e não finalizou o Pix. Quer que a gente te ajude a garantir o horário?');
+          var ac = el('div','acoes'); ac.style.marginTop = '.3rem'; ac.appendChild(z); c.appendChild(ac);
+        }
+        l.appendChild(c); ab.appendChild(l);
+      });
+
+      var as = $('#mt-assinantes'); as.innerHTML = '';
+      var lista = d.assinantes || [];
+      if (!lista.length) as.appendChild(el('p','vazio','Nenhum assinante.'));
+      else {
+        var t = el('table','mt-tabela');
+        t.innerHTML = '<thead><tr><th>Cliente</th><th>Barbeiro</th><th>Plano</th><th>Marcou no período</th><th>Saldo do mês</th><th>Situação</th></tr></thead>';
+        var tb = el('tbody');
+        lista.forEach(function (a) {
+          var tr = el('tr');
+          var saldo = Object.keys(a.cotas || {}).map(function (k) { return ((a.saldo || {})[k] || 0) + '/' + a.cotas[k] + ' ' + (NOMES_COTA[k] || k); }).join(' · ');
+          [a.nome, a.barbeiro, a.plano, String(a.usou_no_periodo), a.status === 'ativo' ? saldo : '—',
+           a.cortesia ? 'Parceria' : a.status === 'ativo' ? 'Ativo até ' + dataBR(a.vence_em) : 'Vencido em ' + dataBR(a.vence_em)].forEach(function (v) { tr.appendChild(el('td', null, v)); });
+          if (!a.usou_no_periodo && a.status === 'ativo') tr.style.color = 'var(--ouro-claro)';
+          tb.appendChild(tr);
+        });
+        t.appendChild(tb); as.appendChild(t);
+        as.appendChild(el('p','pg-regras','Em dourado: assinante ativo que não marcou nada no período.'));
+      }
+
+      var ag = $('#mt-agendamentos'); ag.innerHTML = '';
+      var todos = d.agendamentos || [];
+      if (!todos.length) ag.appendChild(el('p','vazio','Nenhum agendamento no período.'));
+      else {
+        var t2 = el('table','mt-tabela');
+        t2.innerHTML = '<thead><tr><th>Quando</th><th>Cliente</th><th>Barbeiro</th><th>Serviço</th><th>Valor</th><th>Situação</th></tr></thead>';
+        var tb2 = el('tbody');
+        todos.forEach(function (a) {
+          var tr = el('tr');
+          [dataBR(a.data) + ' ' + a.inicio, a.nome, a.barbeiro, a.servico, a.sinal_status === 'plano' ? 'Plano' : dinheiro(a.preco),
+           (ROT_STATUS[a.status] || a.status) + (a.origem === 'balcao' ? ' · balcão' : '')].forEach(function (v) { tr.appendChild(el('td', null, v)); });
+          tb2.appendChild(tr);
+        });
+        t2.appendChild(tb2); ag.appendChild(t2);
+      }
+    }).catch(function (e) { aviso(cards, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
+
   /* ---------------- assinantes (planos) ---------------- */
 
   var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas' };
@@ -776,7 +911,7 @@
         corpo.appendChild(topo);
         var saldo = Object.keys(a.cotas || {}).map(function (k) { return ((a.saldo || {})[k] || 0) + '/' + a.cotas[k] + ' ' + (NOMES_COTA[k] || k); }).join(' · ');
         corpo.appendChild(el('span', null, a.plano + ' · vence ' + (a.vence_em ? dataBR(a.vence_em) : '—') + (a.status === 'ativo' ? ' · saldo ' + saldo : '')));
-        corpo.appendChild(el('span', null, ' · ' + a.email + (a.tem_acesso ? '' : ' (ainda não criou a senha)')));
+        corpo.appendChild(el('span', null, ' · ' + (a.email ? a.email + (a.tem_acesso ? '' : ' (ainda não criou a senha)') : 'sem e-mail ainda')));
         var acoes = el('div','acoes'); acoes.style.marginTop = '.6rem';
         var tel = soDigitos(a.telefone);
         if (tel.length >= 10) {
@@ -784,7 +919,12 @@
           zap.href = 'https://wa.me/55' + tel.replace(/^55/,'') + '?text=' + encodeURIComponent('Oi ' + a.nome.split(' ')[0] + '! Aqui é da Trevus Barbearia, sobre o seu ' + a.plano + ':');
           acoes.appendChild(zap);
         }
-        if (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago)) {
+        if (a.status === 'ativo') {
+          var mp = el('button','btn btn-ouro mini','Marcar pelo plano'); mp.type = 'button';
+          mp.addEventListener('click', function () { formPlano(a, corpo); });
+          acoes.appendChild(mp);
+        }
+        if (!a.cortesia && (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago))) {
           var pg = el('button','btn btn-linha mini','Recebi no balcão'); pg.type = 'button';
           pg.addEventListener('click', function () {
             confirmar(corpo, 'Confirmar que ' + a.nome + ' pagou a mensalidade do ' + a.plano + ' no balcão? ' +
@@ -794,14 +934,19 @@
           });
           acoes.appendChild(pg);
         }
-        if (a.status !== 'cancelado') {
-          var cv = el('button','btn btn-linha mini', a.tem_acesso ? 'Mandar link de senha' : 'Reenviar acesso'); cv.type = 'button';
+        var ed = el('button','btn btn-linha mini', a.email && a.telefone ? 'Editar dados' : 'Completar dados'); ed.type = 'button';
+        ed.addEventListener('click', function () { formDados(a, corpo); });
+        acoes.appendChild(ed);
+        if (a.status !== 'cancelado' && a.email) {
+          var cv = el('button','btn btn-linha mini', a.tem_acesso ? 'Mandar link de senha' : 'Mandar acesso'); cv.type = 'button';
           cv.addEventListener('click', function () {
             cv.disabled = true;
             convidar(a.id).then(function () { aviso(corpo, 'aviso-ok', 'Link enviado para ' + a.email + '.'); })
               .catch(function (e) { cv.disabled = false; aviso(corpo, 'aviso-erro', e.message); });
           });
           acoes.appendChild(cv);
+        }
+        if (a.status !== 'cancelado') {
           var cn = el('button','btn btn-linha mini','Cancelar plano'); cn.type = 'button';
           cn.addEventListener('click', function () {
             confirmar(corpo, 'Cancelar o plano de ' + a.nome + '? Ele para de marcar pelo plano e não recebe mais cobrança.', 'Cancelar plano', function () {
@@ -814,6 +959,67 @@
         item.appendChild(corpo); cx.appendChild(item);
       });
     }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
+
+  function caixaForm(corpo, titulo) {
+    var velho = corpo.querySelector('.confirma'); if (velho) { velho.remove(); return null; }
+    var cx = el('div','confirma'); cx.appendChild(el('p', null, titulo)); corpo.appendChild(cx); return cx;
+  }
+  function campoForm(rot, input) { var c = el('div','campo'); c.style.cssText = 'flex:1;min-width:140px;margin-bottom:.5rem'; c.appendChild(el('label', null, rot)); c.appendChild(input); return c; }
+  function botoesForm(cx, rotulo, acao) {
+    var ac = el('div','acoes'); ac.style.marginTop = '.4rem';
+    var sim = el('button','btn btn-ouro mini', rotulo); sim.type = 'button';
+    var nao = el('button','voltar','Voltar'); nao.type = 'button';
+    var msg = el('div');
+    sim.addEventListener('click', function () { sim.disabled = true; acao(msg, function () { sim.disabled = false; }); });
+    nao.addEventListener('click', function () { cx.remove(); });
+    ac.appendChild(sim); ac.appendChild(nao); cx.appendChild(ac); cx.appendChild(msg);
+  }
+
+  function formDados(a, corpo) {
+    var cx = caixaForm(corpo, 'Dados de ' + a.nome); if (!cx) return;
+    var fn = el('input'); fn.type = 'text'; fn.value = a.nome;
+    var ft = el('input'); ft.type = 'tel'; ft.inputMode = 'numeric'; ft.placeholder = '(71) 9 0000-0000'; ft.value = a.telefone || '';
+    var fe = el('input'); fe.type = 'email'; fe.placeholder = 'cliente@email.com'; fe.value = a.email || '';
+    cx.appendChild(campoForm('Nome', fn)); cx.appendChild(campoForm('WhatsApp', ft)); cx.appendChild(campoForm('E-mail (para o login)', fe));
+    botoesForm(cx, 'Salvar', function (msg, libera) {
+      var email = fe.value.trim().toLowerCase(), tel = soDigitos(ft.value);
+      if (fn.value.trim().length < 2) { libera(); return aviso(msg, 'aviso-erro', 'Escreva o nome.'); }
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { libera(); return aviso(msg, 'aviso-erro', 'Esse e-mail não parece certo.'); }
+      if (tel && (tel.length < 10 || tel.length > 13)) { libera(); return aviso(msg, 'aviso-erro', 'WhatsApp com DDD, só números.'); }
+      sb.from('assinantes').update({ nome: fn.value.trim(), telefone: tel || null, email: email || null }).eq('id', a.id).then(function (r) {
+        if (r.error) throw new Error(/assinantes_email_idx|duplicate/i.test(r.error.message) ? 'Esse e-mail já está em outro assinante.' : r.error.message);
+        if (email && !a.email) {
+          return convidar(a.id).then(function () { pintaAssinantes(); }, function () { pintaAssinantes(); });
+        }
+        pintaAssinantes();
+      }).catch(function (e) { libera(); aviso(msg, 'aviso-erro', e.message); });
+    });
+    if (!a.email) cx.appendChild(el('p','pg-regras','Ao salvar o e-mail, o cliente recebe na hora o link para criar a senha.'));
+  }
+
+  function formPlano(a, corpo) {
+    var cx = caixaForm(corpo, 'Marcar pelo plano: ' + a.nome); if (!cx) return;
+    var linha = el('div'); linha.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap';
+    var fb = el('select');
+    barbeiros.forEach(function (b) { var o = el('option', null, b.nome); o.value = b.id; fb.appendChild(o); });
+    fb.value = a.barbeiro_id || (filtro || barbeiros[0].id);
+    if (a.barbeiro_id) fb.disabled = true;
+    var fd = el('input'); fd.type = 'date'; fd.value = iso(new Date());
+    var fh = el('input'); fh.type = 'time'; fh.step = 300;
+    var agora = new Date(); fh.value = deMinutos(Math.ceil((agora.getHours() * 60 + agora.getMinutes()) / 5) * 5 % 1440);
+    var fdu = el('input'); fdu.type = 'number'; fdu.min = 5; fdu.max = 480; fdu.step = 5; fdu.inputMode = 'numeric'; fdu.placeholder = 'Padrão do plano';
+    linha.appendChild(campoForm('Barbeiro', fb)); linha.appendChild(campoForm('Dia', fd)); linha.appendChild(campoForm('Início', fh)); linha.appendChild(campoForm('Duração (min)', fdu));
+    cx.appendChild(linha);
+    cx.appendChild(el('p','pg-regras','Marca o pacote do plano (' + a.plano + ') e desconta 1 atendimento do saldo do mês. Duração em branco = a soma dos serviços.'));
+    botoesForm(cx, 'Marcar', function (msg, libera) {
+      var dur = parseInt(fdu.value, 10) || null;
+      sb.rpc('agendar_plano_painel', { p_assinante: a.id, p_barbeiro: fb.value, p_data: fd.value, p_inicio: fh.value, p_dur: dur }).then(function (r) {
+        if (r.error) throw new Error(r.error.hint || r.error.message);
+        cx.remove(); aviso(corpo, 'aviso-ok', 'Marcado: ' + porExtenso(fd.value) + ' às ' + fh.value + '.');
+        setTimeout(pintaAssinantes, 1800);
+      }).catch(function (e) { libera(); aviso(msg, 'aviso-erro', e.message); });
+    });
   }
 
   $('#as-tel').addEventListener('input', function () {
@@ -916,7 +1122,8 @@
   // Cliente de plano também tem login: o painel confere se é da equipe.
   function abrePainel(userId) {
     (DEMO ? Promise.resolve(true) : sb.rpc('e_socio').then(function (r) { return !!r.data; })).then(function (socio) {
-      if (socio) return entraPainel(userId);
+      if (socio) return (DEMO ? Promise.resolve(false) : sb.rpc('e_gestor_rpc').then(function (g) { return !!g.data; }))
+        .then(function (g) { GESTOR = g; entraPainel(userId); });
       $('#tela-senha').hidden = true; $('#tela-painel').hidden = true; $('#tela-login').hidden = false;
       var cx = $('#msg-login'); cx.innerHTML = '';
       var d = el('div','aviso aviso-neutro','Essa área é só da equipe. Se você é assinante, entre pela Área do assinante. ');
@@ -925,12 +1132,15 @@
     });
   }
 
+  var GESTOR = false;
   function entraPainel(userId) {
     DADOS.carregar().then(function (r) {
       barbeiros = r[0]; servicos = r[1];
       var eu = barbeiros.filter(function(b){ return userId && b.user_id === userId; })[0];
       filtro = eu ? eu.id : null;
       if (eu) $('#quem-logado').textContent = 'Olá, ' + eu.nome;
+      else if (GESTOR) $('#quem-logado').textContent = 'Painel master';
+      $('#aba-master').hidden = !GESTOR;
 
       ['#bl-quem', '#bc-quem'].forEach(function (sel) {
         var s = $(sel); s.innerHTML = '';
