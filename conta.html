@@ -7,6 +7,12 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#07100C">
 <link rel="icon" href="fotos/logo.jpg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trevus">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -70,6 +76,7 @@
       <div class="campos">
         <div class="campo"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="username" required></div>
         <div class="campo"><label for="lg-senha">Senha</label><input id="lg-senha" type="password" autocomplete="current-password" required></div>
+        <label class="manter"><input type="checkbox" id="lg-manter" checked> Manter conectado neste aparelho</label>
         <button class="btn btn-ouro btn-bloco" type="submit">Entrar</button>
       </div>
     </form>
@@ -107,6 +114,7 @@
 <!-- ---------- CONTA ---------- -->
 <main class="wrap" id="tela-conta" hidden style="padding-top:1.6rem;padding-bottom:5rem;max-width:860px">
   <div id="msg-conta"></div>
+  <div id="convite-app"></div>
 
   <section class="perfil">
     <div class="avatar" id="avatar"></div>
@@ -156,6 +164,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
 <script>
 (function () {
   'use strict';
@@ -195,7 +204,9 @@
   var tipoLink = hashLink.get('type'), erroLink = hashLink.get('error_code') || hashLink.get('error');
   var busca = new URLSearchParams(location.search);
   var voltaPlano = busca.get('plano');
-  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {
+    auth: { storage: window.TV_ARMAZEM, persistSession: true, autoRefreshToken: true }
+  });
 
   var eu = null, servicos = [], escolha = { servicos: [], dia: null };
 
@@ -232,6 +243,7 @@
         return;
       }
       mostra('#tela-conta');
+      window.TV_CONVITE_APP($('#convite-app'));
       if (location.hash || location.search) history.replaceState(null, '', location.pathname);
       pintaPerfil(); pintaSituacao(); pintaSaldo(); pintaMarcar(); pintaHorarios();
     }).catch(function (e) { mostra('#tela-login'); aviso($('#msg-login'), 'aviso-erro', e.message); });
@@ -549,6 +561,7 @@
   $('#form-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var cx = $('#msg-login'); aviso(cx, 'aviso-neutro', 'Entrando…');
+    window.TV_DEFINE_MANTER($('#lg-manter').checked);
     sb.auth.signInWithPassword({ email: $('#lg-email').value.trim(), password: $('#lg-senha').value }).then(function (r) {
       if (r.error) return aviso(cx, 'aviso-erro', 'E-mail ou senha não conferem.');
       cx.innerHTML = ''; carregaConta();

@@ -489,3 +489,11 @@ h3{font-size:1.1rem;letter-spacing:.04em}
 .topo-acoes{display:flex;gap:.5rem;align-items:center}
 .topo-acoes .entrar{padding-inline:1rem}
 @media(max-width:520px){ .topo-acoes .btn{font-size:.8rem;padding:.55rem .8rem;min-height:42px} }
+/* ---------- app na tela inicial / manter conectado ---------- */
+.convite-app{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:1.2rem;
+  border:1px solid var(--ouro-fundo);background:rgba(215,174,79,.08);border-radius:14px;padding:.9rem 1rem}
+.convite-app b{display:block;font-size:1rem}
+.convite-app p{color:var(--cinza);font-size:.88rem;margin-top:.2rem;max-width:36rem}
+.convite-acoes{display:flex;gap:.6rem;align-items:center}
+.manter{display:flex;gap:.55rem;align-items:center;font-size:.92rem;color:var(--creme);min-height:44px;cursor:pointer}
+.manter input{width:20px;height:20px;accent-color:var(--ouro)}
