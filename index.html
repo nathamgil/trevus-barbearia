@@ -421,6 +421,11 @@
   <div class="wrap">
     <p class="olho">Por dentro</p>
     <h2>A casa reformada</h2>
+    <p class="tour-dica">Faça o tour: da rua até a cadeira, do jeito que você vai chegar.</p>
+    <figure class="tour">
+      <video id="tour-video" muted playsinline loop preload="none" poster="video/tour-capa.jpg" aria-label="Vídeo do caminho da rua até o salão da Trevus, passando pela galeria, pelas cadeiras e pelo letreiro na parede de folhagem."></video>
+      <button class="tour-tela btn btn-linha mini" type="button" id="tour-tela">Ver em tela cheia</button>
+    </figure>
     <div class="galeria">
       <figure>
         <img src="fotos/salao.jpg" loading="lazy" alt="Salão da Trevus: cadeiras de couro preto, espelhos com luz dourada e a parede de folhagem com o letreiro ao fundo.">
@@ -664,5 +669,25 @@
 </script>
 <script src="assets/agenda.js"></script>
 <script src="assets/planos.js"></script>
+<script>
+(function () {
+  var v = document.getElementById('tour-video'); if (!v) return;
+  var src = (window.innerWidth < 900 ? 'video/tour-720.mp4' : 'video/tour-1080.mp4');
+  var carregado = false;
+  function carrega() { if (!carregado) { v.src = src; carregado = true; } }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { carrega(); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+        else if (carregado) v.pause();
+      });
+    }, { threshold: 0.4 }).observe(v);
+  } else { carrega(); }
+  document.getElementById('tour-tela').addEventListener('click', function () {
+    carrega(); v.play();
+    if (v.requestFullscreen) v.requestFullscreen(); else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+  });
+})();
+</script>
 </body>
 </html>
