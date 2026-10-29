@@ -44,6 +44,14 @@
   .servicos-check input{width:18px;height:18px;accent-color:var(--ouro)}
   .confirma{margin-top:.6rem;padding:.8rem 1rem;border:1px solid var(--borda);border-radius:12px;background:var(--musgo)}
   .confirma p{font-size:.9rem;margin-bottom:.5rem}
+  .grupo-barbeiro{display:flex;align-items:center;gap:.6rem;margin:1.2rem 0 .3rem;padding-bottom:.4rem;border-bottom:1px solid var(--borda);font-family:'Cinzel',serif;color:var(--ouro-claro);font-size:1.05rem}
+  .grupo-barbeiro:first-child{margin-top:0}
+  .grupo-barbeiro span{font-family:inherit;font-size:.8rem;color:var(--cinza-fraco);font-family:'Manrope',sans-serif}
+  .ed-grade{display:flex;gap:.5rem;flex-wrap:wrap}
+  .ed-sec{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ouro);margin:.8rem 0 .3rem}
+  .ed-marca{display:flex;align-items:center;gap:.5rem;font-size:.9rem;margin:.3rem 0 .5rem;min-height:44px}
+  .ed-marca input{width:22px;height:22px}
+  .obs-assinante{display:block;font-size:.85rem;color:var(--cinza-fraco);font-style:italic;margin-top:.2rem}
   .mt-barbeiros{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.8rem;margin-top:1rem}
   .mt-card{background:var(--mata);border:1px solid var(--borda);border-radius:16px;padding:1rem 1.1rem}
   .mt-card header{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem}
@@ -268,8 +276,9 @@
       <div class="dupla" style="align-items:start">
         <div>
           <h3>Assinantes</h3>
-          <p class="sub" style="margin-top:.5rem">Quem assinou pelo site ou foi cadastrado aqui. Vencido = mensalidade em aberto: o plano fica travado até pagar.</p>
-          <div class="cartao" style="margin-top:1.2rem" id="lista-assinantes"></div>
+          <p class="sub" style="margin-top:.5rem">Quem assinou pelo site ou foi cadastrado aqui. Vencido = mensalidade em aberto: o plano fica travado até pagar. Use os botões de barbeiro lá em cima para ver só os assinantes de um.</p>
+          <div class="campo" style="margin-top:1rem"><label for="as-busca">Procurar assinante</label><input id="as-busca" type="search" placeholder="Nome, e-mail ou WhatsApp" autocomplete="off"></div>
+          <div class="cartao" style="margin-top:.6rem" id="lista-assinantes"></div>
         </div>
         <div>
           <h3>Cadastrar quem pagou no balcão</h3>
@@ -879,6 +888,8 @@
   /* ---------------- assinantes (planos) ---------------- */
 
   var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas' };
+  var PLANOS = [], LISTA_AS = [];
+  var ROT_AS = { ativo: 'Ativo', vencido: 'Vencido (mensalidade em aberto)', cancelado: 'Cancelado', aguardando_pagamento: 'Comprou no site, não pagou' };
   function dataBR(s){ return String(s).split('-').reverse().join('/'); }
 
   function convidar(id) {
@@ -893,8 +904,15 @@
     var cx = $('#lista-assinantes');
     if (DEMO) { cx.innerHTML = ''; return cx.appendChild(el('p','vazio','Os planos funcionam com o site ligado ao banco.')); }
     cx.innerHTML = '<div class="carregando">Carregando…</div>';
-    sb.rpc('lista_assinantes').then(resp).then(function (lista) {
-      lista = lista.filter(function (a) { return !filtro || a.barbeiro_id === filtro; });
+    sb.rpc('lista_assinantes').then(resp).then(function (lista) { LISTA_AS = lista; desenhaAssinantes(); })
+      .catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
+
+  function desenhaAssinantes() {
+    var cx = $('#lista-assinantes');
+    var termo = ($('#as-busca').value || '').trim().toLowerCase(), termoNum = soDigitos(termo);
+    var lista = LISTA_AS.filter(function (a) { return !filtro || a.barbeiro_id === filtro; });
+    (function () {
       var ativos = lista.filter(function (a) { return a.status === 'ativo'; });
       var vencidos = lista.filter(function (a) { return a.status === 'vencido'; });
       var logo = ativos.filter(function (a) { return !a.proximo_pago && a.vence_em && (deIso(a.vence_em) - deIso(iso(new Date()))) / 86400000 <= 3; });
@@ -903,8 +921,26 @@
         var d = el('div','metrica'); d.appendChild(el('b', null, String(x[0]))); d.appendChild(el('span', null, x[1])); m.appendChild(d);
       });
       cx.innerHTML = '';
-      if (!lista.length) return cx.appendChild(el('p','vazio','Nenhum assinante ainda.'));
-      lista.forEach(function (a) {
+      if (termo) lista = lista.filter(function (a) {
+        return (a.nome || '').toLowerCase().indexOf(termo) >= 0 || (a.email || '').toLowerCase().indexOf(termo) >= 0 ||
+          (termoNum.length >= 4 && soDigitos(a.telefone).indexOf(termoNum) >= 0);
+      });
+      if (!lista.length) return cx.appendChild(el('p','vazio', termo ? 'Ninguém com esse nome.' : 'Nenhum assinante ainda.'));
+      var grupos = [];
+      if (filtro) grupos.push({ nome: null, itens: lista });
+      else {
+        barbeiros.forEach(function (b) { grupos.push({ nome: b.nome, itens: lista.filter(function (a) { return a.barbeiro_id === b.id; }) }); });
+        grupos.push({ nome: 'Qualquer barbeiro', itens: lista.filter(function (a) { return !a.barbeiro_id; }) });
+      }
+      grupos.forEach(function (g) {
+      if (!g.itens.length) return;
+      if (g.nome) {
+        var h = el('div','grupo-barbeiro', g.nome);
+        var at = g.itens.filter(function (a) { return a.status === 'ativo'; }).length;
+        h.appendChild(el('span', null, at + (at === 1 ? ' ativo' : ' ativos') + ' · ' + g.itens.length + ' no total'));
+        cx.appendChild(h);
+      }
+      g.itens.forEach(function (a) {
         var item = el('div','agenda-item');
         var foto = el('div','agenda-hora'); foto.style.width = '3.4rem';
         if (a.foto) { var im = el('img'); im.src = a.foto; im.alt = ''; im.style.cssText = 'width:48px;height:48px;border-radius:50%;object-fit:cover'; foto.appendChild(im); }
@@ -914,12 +950,14 @@
         var topo = el('div'); topo.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap';
         topo.appendChild(el('strong', null, a.nome));
         if (!filtro) topo.appendChild(el('span','tag tag-barbeiro', a.barbeiro));
-        var st = a.status === 'ativo' ? ['tag-pago', a.proximo_pago ? 'Pago adiantado' : 'Ativo'] : a.status === 'vencido' ? ['tag-off', 'Vencido'] : ['tag-fim', 'Cancelado'];
+        var st = a.status === 'ativo' ? ['tag-pago', a.cortesia ? 'Parceria' : a.proximo_pago ? 'Pago adiantado' : 'Ativo'] : a.status === 'vencido' ? ['tag-off', 'Vencido']
+          : a.status === 'aguardando_pagamento' ? ['tag-off', 'Compra não paga'] : ['tag-fim', 'Cancelado'];
         topo.appendChild(el('span','tag ' + st[0], st[1]));
         corpo.appendChild(topo);
         var saldo = Object.keys(a.cotas || {}).map(function (k) { return ((a.saldo || {})[k] || 0) + '/' + a.cotas[k] + ' ' + (NOMES_COTA[k] || k); }).join(' · ');
         corpo.appendChild(el('span', null, a.plano + ' · vence ' + (a.vence_em ? dataBR(a.vence_em) : '—') + (a.status === 'ativo' ? ' · saldo ' + saldo : '')));
         corpo.appendChild(el('span', null, ' · ' + (a.email ? a.email + (a.tem_acesso ? '' : ' (ainda não criou a senha)') : 'sem e-mail ainda')));
+        if (a.obs) corpo.appendChild(el('span','obs-assinante', 'Obs.: ' + a.obs));
         var acoes = el('div','acoes'); acoes.style.marginTop = '.6rem';
         var tel = soDigitos(a.telefone);
         if (tel.length >= 10) {
@@ -942,10 +980,10 @@
           });
           acoes.appendChild(pg);
         }
-        var ed = el('button','btn btn-linha mini', a.email && a.telefone ? 'Editar dados' : 'Completar dados'); ed.type = 'button';
-        ed.addEventListener('click', function () { formDados(a, corpo); });
+        var ed = el('button','btn btn-linha mini', 'Editar'); ed.type = 'button';
+        ed.addEventListener('click', function () { formEditar(a, corpo); });
         acoes.appendChild(ed);
-        if (a.status !== 'cancelado' && a.email) {
+        if (a.status !== 'cancelado' && a.status !== 'aguardando_pagamento' && a.email) {
           var cv = el('button','btn btn-linha mini', a.tem_acesso ? 'Mandar link de senha' : 'Mandar acesso'); cv.type = 'button';
           cv.addEventListener('click', function () {
             cv.disabled = true;
@@ -954,7 +992,7 @@
           });
           acoes.appendChild(cv);
         }
-        if (a.status !== 'cancelado') {
+        if (a.status === 'ativo' || a.status === 'vencido') {
           var cn = el('button','btn btn-linha mini','Cancelar plano'); cn.type = 'button';
           cn.addEventListener('click', function () {
             confirmar(corpo, 'Cancelar o plano de ' + a.nome + '? Ele para de marcar pelo plano e não recebe mais cobrança.', 'Cancelar plano', function () {
@@ -966,8 +1004,10 @@
         corpo.appendChild(acoes);
         item.appendChild(corpo); cx.appendChild(item);
       });
-    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+      });
+    })();
   }
+  $('#as-busca').addEventListener('input', function () { if (LISTA_AS.length) desenhaAssinantes(); });
 
   function caixaForm(corpo, titulo) {
     var velho = corpo.querySelector('.confirma'); if (velho) { velho.remove(); return null; }
@@ -984,26 +1024,101 @@
     ac.appendChild(sim); ac.appendChild(nao); cx.appendChild(ac); cx.appendChild(msg);
   }
 
-  function formDados(a, corpo) {
-    var cx = caixaForm(corpo, 'Dados de ' + a.nome); if (!cx) return;
-    var fn = el('input'); fn.type = 'text'; fn.value = a.nome;
-    var ft = el('input'); ft.type = 'tel'; ft.inputMode = 'numeric'; ft.placeholder = '(71) 9 0000-0000'; ft.value = a.telefone || '';
-    var fe = el('input'); fe.type = 'email'; fe.placeholder = 'cliente@email.com'; fe.value = a.email || '';
-    cx.appendChild(campoForm('Nome', fn)); cx.appendChild(campoForm('WhatsApp', ft)); cx.appendChild(campoForm('E-mail (para o login)', fe));
-    botoesForm(cx, 'Salvar', function (msg, libera) {
-      var email = fe.value.trim().toLowerCase(), tel = soDigitos(ft.value);
-      if (fn.value.trim().length < 2) { libera(); return aviso(msg, 'aviso-erro', 'Escreva o nome.'); }
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { libera(); return aviso(msg, 'aviso-erro', 'Esse e-mail não parece certo.'); }
-      if (tel && (tel.length < 10 || tel.length > 13)) { libera(); return aviso(msg, 'aviso-erro', 'WhatsApp com DDD, só números.'); }
-      sb.from('assinantes').update({ nome: fn.value.trim(), telefone: tel || null, email: email || null }).eq('id', a.id).then(function (r) {
-        if (r.error) throw new Error(/assinantes_email_idx|duplicate/i.test(r.error.message) ? 'Esse e-mail já está em outro assinante.' : r.error.message);
-        if (email && !a.email) {
-          return convidar(a.id).then(function () { pintaAssinantes(); }, function () { pintaAssinantes(); });
-        }
-        pintaAssinantes();
-      }).catch(function (e) { libera(); aviso(msg, 'aviso-erro', e.message); });
+  function formEditar(a, corpo) {
+    var cx = caixaForm(corpo, 'Editar ' + a.nome); if (!cx) return;
+    function inp(tipo, val) { var i = el('input'); i.type = tipo; if (val != null) i.value = val; return i; }
+    function grade() { var g = el('div','ed-grade'); cx.appendChild(g); return g; }
+
+    cx.appendChild(el('p','ed-sec','Dados'));
+    var g1 = grade();
+    var fn = inp('text', a.nome);
+    var ft = inp('tel', a.telefone || ''); ft.inputMode = 'numeric'; ft.placeholder = '(71) 9 0000-0000';
+    var fe = inp('email', a.email || ''); fe.placeholder = 'cliente@email.com';
+    g1.appendChild(campoForm('Nome', fn)); g1.appendChild(campoForm('WhatsApp', ft)); g1.appendChild(campoForm('E-mail (para o login)', fe));
+
+    cx.appendChild(el('p','ed-sec','Plano'));
+    var g2 = grade();
+    var fp = el('select');
+    var planos = PLANOS.length ? PLANOS : [{ id: a.plano_id, nome: a.plano, preco_centavos: 0, cotas: a.cotas, ativo: true }];
+    planos.forEach(function (p) {
+      if (!p.ativo && p.id !== a.plano_id && p.preco_centavos > 0) return;
+      var o = el('option', null, p.nome + (p.preco_centavos ? ' · ' + dinheiro(p.preco_centavos) : ' · sem mensalidade')); o.value = p.id; fp.appendChild(o);
     });
-    if (!a.email) cx.appendChild(el('p','pg-regras','Ao salvar o e-mail, o cliente recebe na hora o link para criar a senha.'));
+    fp.value = a.plano_id;
+    var fb = el('select');
+    var oq = el('option', null, 'Qualquer barbeiro'); oq.value = ''; fb.appendChild(oq);
+    barbeiros.forEach(function (b) { var o = el('option', null, b.nome); o.value = b.id; fb.appendChild(o); });
+    fb.value = a.barbeiro_id || '';
+    var fs = el('select');
+    ['ativo','vencido','cancelado','aguardando_pagamento'].forEach(function (k) {
+      if (k === 'aguardando_pagamento' && a.status !== k) return;
+      var o = el('option', null, ROT_AS[k]); o.value = k; fs.appendChild(o);
+    });
+    fs.value = a.status;
+    var fv = inp('date', a.vence_em || '');
+    g2.appendChild(campoForm('Plano', fp)); g2.appendChild(campoForm('Barbeiro do plano', fb));
+    g2.appendChild(campoForm('Situação', fs)); g2.appendChild(campoForm('Vence em', fv));
+    var lp = el('label','ed-marca'); var fpp = inp('checkbox'); fpp.checked = !!a.proximo_pago;
+    lp.appendChild(fpp); lp.appendChild(document.createTextNode('Próximo mês já está pago'));
+    cx.appendChild(lp);
+    cx.appendChild(el('p','pg-regras','A mensalidade cai na InfinitePay do barbeiro do plano. Mudar o vencimento muda o dia da cobrança e começa um mês novo de saldo.'));
+
+    var caixaSaldo = el('div'); cx.appendChild(caixaSaldo);
+    var camposSaldo = {};
+    function pintaSaldo() {
+      caixaSaldo.innerHTML = ''; camposSaldo = {};
+      if (fs.value !== 'ativo' || a.status !== 'ativo' || fp.value !== a.plano_id || (fv.value || '') !== (a.vence_em || '')) {
+        if (a.status === 'ativo') caixaSaldo.appendChild(el('p','pg-regras','O saldo do mês dá para ajustar quando só os dados, o barbeiro ou a observação mudarem.'));
+        return;
+      }
+      caixaSaldo.appendChild(el('p','ed-sec','Saldo deste mês'));
+      var g3 = el('div','ed-grade'); caixaSaldo.appendChild(g3);
+      Object.keys(a.cotas || {}).forEach(function (k) {
+        var i = inp('number', (a.saldo || {})[k] || 0); i.min = 0; i.max = 99; i.inputMode = 'numeric';
+        camposSaldo[k] = i; g3.appendChild(campoForm((NOMES_COTA[k] || k).replace(/^./, function (c) { return c.toUpperCase(); }) + ' (de ' + a.cotas[k] + ')', i));
+      });
+      caixaSaldo.appendChild(el('p','pg-regras','Use para dar um atendimento de cortesia ou descontar um que foi feito fora do sistema. Vale só até ' + dataBR(a.vence_em) + '.'));
+    }
+    [fp, fs, fv].forEach(function (x) { x.addEventListener('change', pintaSaldo); });
+    pintaSaldo();
+
+    cx.appendChild(el('p','ed-sec','Observação'));
+    var fo = el('textarea'); fo.rows = 2; fo.value = a.obs || ''; fo.placeholder = 'Ex.: paga sempre no balcão, prefere sábado de manhã';
+    fo.style.cssText = 'width:100%;min-height:64px'; cx.appendChild(fo);
+
+    var lm = el('label','ed-marca'); var fm = inp('checkbox'); fm.checked = true;
+    lm.appendChild(fm); lm.appendChild(document.createTextNode('Mandar o acesso por e-mail ao salvar'));
+    if (!a.email && !a.tem_acesso) cx.appendChild(lm);
+
+    botoesForm(cx, 'Salvar', function (msg, libera) {
+      var saldo = null;
+      if (Object.keys(camposSaldo).length) {
+        saldo = {}; var mudou = false;
+        Object.keys(camposSaldo).forEach(function (k) {
+          saldo[k] = Math.max(0, parseInt(camposSaldo[k].value, 10) || 0);
+          if (saldo[k] !== ((a.saldo || {})[k] || 0)) mudou = true;
+        });
+        if (!mudou) saldo = null;
+      }
+      sb.rpc('editar_assinante', { p_id: a.id, p_nome: fn.value, p_telefone: ft.value, p_email: fe.value, p_plano: fp.value,
+        p_barbeiro: fb.value || null, p_vence: fv.value || null, p_status: fs.value, p_proximo_pago: fpp.checked, p_obs: fo.value, p_saldo: saldo })
+        .then(function (r) {
+          if (r.error) throw new Error(r.error.hint || r.error.message);
+          if (r.data === true && fm.checked) return convidar(a.id).then(pintaAssinantes, pintaAssinantes);
+          pintaAssinantes();
+        }).catch(function (e) { libera(); aviso(msg, 'aviso-erro', e.message); });
+    });
+
+    var ex = el('button','voltar','Excluir assinante'); ex.type = 'button'; ex.style.cssText = 'margin-top:.6rem;color:#e08a7a';
+    ex.addEventListener('click', function () {
+      confirmar(cx, 'Excluir ' + a.nome + ' de vez? Só dá para excluir quem nunca marcou horário pelo plano (ex.: compra de teste). Para quem parou de pagar, use "Cancelado".', 'Excluir', function () {
+        sb.rpc('excluir_assinante', { p_id: a.id }).then(function (r) {
+          if (r.error) throw new Error(r.error.hint || r.error.message);
+          pintaAssinantes();
+        }).catch(function (e) { aviso(cx, 'aviso-erro', e.message); });
+      });
+    });
+    cx.appendChild(ex);
   }
 
   function formPlano(a, corpo) {
@@ -1174,9 +1289,10 @@
       var sq = $('#as-quem'); sq.innerHTML = '';
       barbeiros.forEach(function (b) { var o = el('option', null, b.nome); o.value = b.id; sq.appendChild(o); });
       if (eu) sq.value = eu.id;
-      if (!DEMO) sb.from('planos').select('id,nome,preco_centavos').eq('ativo', true).order('ordem').then(resp).then(function (l) {
+      if (!DEMO) sb.from('planos').select('id,nome,preco_centavos,cotas,ativo').order('ordem').then(resp).then(function (l) {
+        PLANOS = l;
         var s = $('#as-plano'); s.innerHTML = '';
-        l.forEach(function (p) { var o = el('option', null, p.nome + ' · ' + dinheiro(p.preco_centavos)); o.value = p.id; s.appendChild(o); });
+        l.filter(function (p) { return p.ativo; }).forEach(function (p) { var o = el('option', null, p.nome + ' · ' + dinheiro(p.preco_centavos)); o.value = p.id; s.appendChild(o); });
       }).catch(function(){});
 
       $('#tela-login').hidden = true; $('#tela-senha').hidden = true; $('#tela-painel').hidden = false;

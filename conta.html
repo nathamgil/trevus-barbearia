@@ -280,10 +280,10 @@
         cx.appendChild(el('p', null, 'Garantido até ' + dataBR(maisUmMes(eu.vence_em)) + '. O saldo renova sozinho em ' + dataBR(eu.vence_em) + '.'));
       } else {
         cx.appendChild(el('b', null, 'Plano ativo até ' + dataBR(eu.vence_em)));
-        cx.appendChild(el('p', null, dias <= 5
+        cx.appendChild(el('p', null, dias <= 10
           ? 'A mensalidade de ' + dinheiro(eu.plano_preco) + ' vence ' + (dias <= 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias') + '. Pague e o saldo renova sem interrupção.'
           : 'Mensalidade de ' + dinheiro(eu.plano_preco) + ' todo dia ' + deIso(eu.vence_em).getDate() + '. Você recebe o link por e-mail 3 dias antes.'));
-        if (dias <= 5) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
+        if (dias <= 10) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
       }
     } else {
       cx.classList.add('alerta');
