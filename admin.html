@@ -48,6 +48,7 @@
   .grupo-barbeiro:first-child{margin-top:0}
   .grupo-barbeiro span{font-family:inherit;font-size:.8rem;color:var(--cinza-fraco);font-family:'Manrope',sans-serif}
   .ed-grade{display:flex;gap:.5rem;flex-wrap:wrap}
+  .ed-grade .campo{min-width:190px !important}
   .ed-sec{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ouro);margin:.8rem 0 .3rem}
   .ed-marca{display:flex;align-items:center;gap:.5rem;font-size:.9rem;margin:.3rem 0 .5rem;min-height:44px}
   .ed-marca input{width:22px;height:22px}
@@ -889,7 +890,7 @@
 
   var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas' };
   var PLANOS = [], LISTA_AS = [];
-  var ROT_AS = { ativo: 'Ativo', vencido: 'Vencido (mensalidade em aberto)', cancelado: 'Cancelado', aguardando_pagamento: 'Comprou no site, não pagou' };
+  var ROT_AS = { ativo: 'Ativo', vencido: 'Vencido (em aberto)', cancelado: 'Cancelado', aguardando_pagamento: 'Compra não paga' };
   function dataBR(s){ return String(s).split('-').reverse().join('/'); }
 
   function convidar(id) {
@@ -949,7 +950,6 @@
         var corpo = el('div','agenda-corpo');
         var topo = el('div'); topo.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap';
         topo.appendChild(el('strong', null, a.nome));
-        if (!filtro) topo.appendChild(el('span','tag tag-barbeiro', a.barbeiro));
         var st = a.status === 'ativo' ? ['tag-pago', a.cortesia ? 'Parceria' : a.proximo_pago ? 'Pago adiantado' : 'Ativo'] : a.status === 'vencido' ? ['tag-off', 'Vencido']
           : a.status === 'aguardando_pagamento' ? ['tag-off', 'Compra não paga'] : ['tag-fim', 'Cancelado'];
         topo.appendChild(el('span','tag ' + st[0], st[1]));
