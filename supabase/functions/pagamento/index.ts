@@ -217,30 +217,45 @@ async function lembretes() {
 
 async function pagamentoPlano(id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(String(id))) return null;
-  const l = await banco(`pagamentos_plano?id=eq.${id}&select=*,assinantes(*,planos(nome,preco_centavos,itens),barbeiros(nome,infinitepay_handle))`);
+  const l = await banco(`pagamentos_plano?id=eq.${id}&select=*,assinantes(*,planos(nome,preco_centavos,itens,cartao_pct,multa_centavos),barbeiros(nome,infinitepay_handle))`);
   return l?.[0] ?? null;
 }
+
+// Preço no cartão: com a chave de API do barbeiro, o link sai com o preço de
+// cartão (Pix + cartao_pct%) e desconto no Pix que volta ao valor da
+// mensalidade; os juros do parcelado ficam com o cliente.
+async function chaveApi(barbeiroId: string | null) {
+  if (!barbeiroId) return null;
+  const l = await banco(`infinitepay_chaves?barbeiro_id=eq.${barbeiroId}&select=api_key`).catch(() => []);
+  return l?.[0]?.api_key ?? null;
+}
+function precoCartao(pix: number, pct: number) { return pct > 0 ? Math.ceil(pix * 100 / (100 - pct)) : pix; }
 
 async function linkPlano(pg: any) {
   const a = pg.assinantes, handle = a?.barbeiros?.infinitepay_handle;
   if (!handle) throw new Error("O barbeiro do plano ainda não tem InfiniteTag cadastrada.");
-  const tel = String(a.telefone).replace(/\D/g, "");
+  const tel = String(a.telefone ?? "").replace(/\D/g, "");
+  const chave = await chaveApi(a.barbeiro_id);
+  const pct = chave ? Number(a.planos?.cartao_pct ?? 0) : 0;
+  const preco = precoCartao(pg.valor_centavos, pct);
+  const desc = `${a.planos.nome} - mensalidade com ${a.barbeiros.nome}${pg.multa_centavos ? " (com multa por atraso)" : ""}`;
   const r = await fetch(`${IP_API}/links`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(chave ? { "X-Api-Key": chave } : {}) },
     body: JSON.stringify({
       handle,
       order_nsu: `plano-${pg.id}`,
-      items: [{ quantity: 1, price: pg.valor_centavos, description: `${a.planos.nome} - mensalidade com ${a.barbeiros.nome}` }],
+      items: [{ quantity: 1, price: preco, description: desc }],
+      ...(chave ? { options: { assured_installments: 0, ...(pct > 0 ? { discounts: { pix: pct } } : {}) } } : {}),
       redirect_url: `${SITE_URL}/conta.html?plano=${pg.id}`,
       webhook_url: `${SB_URL}/functions/v1/pagamento?acao=webhook`,
-      customer: { name: a.nome, email: a.email, phone_number: `+55${tel.replace(/^55/, "")}` },
+      customer: { name: a.nome, ...(a.email ? { email: a.email } : {}), ...(tel ? { phone_number: `+55${tel.replace(/^55/, "")}` } : {}) },
       address: { cep: "40230680", number: "28" },
     }),
   });
   const corpo = await r.json().catch(() => ({}));
   const url = corpo.url ?? corpo.link ?? corpo.checkout_url ?? corpo.data?.url;
-  if (!r.ok || !url) throw new Error("A InfinitePay não gerou o link de pagamento. Tente de novo.");
+  if (!r.ok || !url) { console.error("links", r.status, JSON.stringify(corpo)); throw new Error("A InfinitePay não gerou o link de pagamento. Tente de novo."); }
   return url as string;
 }
 
@@ -262,7 +277,8 @@ async function enviarAcesso(a: any, motivo: "novo" | "pedido") {
     acesso_enviado_em: new Date().toISOString(), ...(userId && !a.user_id ? { user_id: userId } : {}) }) });
   const titulo = motivo === "novo" ? "Bem-vindo ao plano! Crie seu acesso" : "Seu link para entrar";
   const texto = motivo === "novo"
-    ? "Seu plano está ativo. Toque no botão para criar sua senha: na sua área você vê o saldo do mês, coloca sua foto e marca horário sem pagar sinal."
+    ? "Seu plano está ativo. Toque no botão para criar sua senha: na sua área você vê o saldo do mês, coloca sua foto e marca horário sem pagar sinal." +
+      (a.vence_em && !a.cortesia ? ` A próxima mensalidade vence dia ${dataBR(a.vence_em)} e você paga por lá mesmo, no Pix ou no cartão. Depois do vencimento entra multa por atraso.` : "")
     : "Toque no botão para criar uma senha nova e entrar na sua área de assinante.";
   return enviar(a.email, motivo === "novo" ? "Seu plano Trevus está ativo: crie seu acesso" : "Acesse sua área de assinante Trevus",
     moldura(titulo, texto, `<p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#D7AE4F;color:#1B1405;padding:14px 26px;border-radius:10px;font-weight:bold;text-decoration:none;display:inline-block">Criar minha senha</a></p>
@@ -280,7 +296,7 @@ function moldura(titulo: string, texto: string, miolo = "") {
 
 const botaoPagar = (url: string, rotulo: string) =>
   `<p style="text-align:center;margin:22px 0"><a href="${url}" style="background:#D7AE4F;color:#1B1405;padding:14px 26px;border-radius:10px;font-weight:bold;text-decoration:none;display:inline-block">${rotulo}</a></p>
-   <p style="font-size:13px;color:#4A5C52">Pix ou cartão. Se o botão não abrir, entre em ${SITE_URL.replace(/^https?:\/\//, "")}/conta.html e toque em "Pagar mensalidade".</p>`;
+   <p style="font-size:13px;color:#4A5C52">Pix ou cartão (no cartão o valor tem a taxa da maquininha). Se o botão não abrir, entre em ${SITE_URL.replace(/^https?:\/\//, "")}/conta.html e toque em "Pagar mensalidade".</p>`;
 
 async function processarPlano(id: string, transactionNsu: string, slug: string, extra: Record<string, unknown> = {}) {
   const pg = await pagamentoPlano(id);
@@ -351,17 +367,19 @@ async function lembretesPlanos() {
   const lista = await rpc("avisos_planos", {});
   let n = 0;
   for (const av of lista ?? []) {
-    const a = (await banco(`assinantes?id=eq.${av.assinante_id}&select=*,planos(nome,preco_centavos)`))[0];
+    const a = (await banco(`assinantes?id=eq.${av.assinante_id}&select=*,planos(nome,preco_centavos,multa_centavos)`))[0];
     if (!a) continue;
     const pgId = await rpc("cobranca_aberta", { p_assinante: a.id });
     const pg = pgId ? await pagamentoPlano(pgId) : null;
     const url = pg ? await linkPlano(pg).catch(() => `${SITE_URL}/conta.html`) : `${SITE_URL}/conta.html`;
+    const multa = Number(a.planos.multa_centavos ?? 0);
     const [assunto, titulo, texto] = av.tipo === "d3"
-      ? [`Seu plano vence em 3 dias (${dataBR(a.vence_em)})`, "Seu plano vence em 3 dias", `A mensalidade do ${a.planos.nome} (${reais(a.planos.preco_centavos)}) vence dia ${dataBR(a.vence_em)}. Pague agora e seu saldo renova sem interrupção.`]
+      ? [`Seu plano vence em 3 dias (${dataBR(a.vence_em)})`, "Seu plano vence em 3 dias", `A mensalidade do ${a.planos.nome} (${reais(a.planos.preco_centavos)}) vence dia ${dataBR(a.vence_em)}. Pague agora e seu saldo renova sem interrupção.${multa ? ` Depois do vencimento entra multa de ${reais(multa)}.` : ""}`]
       : av.tipo === "d1"
-      ? [`Seu plano vence amanhã`, "Seu plano vence amanhã", `A mensalidade do ${a.planos.nome} (${reais(a.planos.preco_centavos)}) vence amanhã, ${dataBR(a.vence_em)}. Sem o pagamento, o plano trava e os horários voltam a pedir sinal.`]
-      : [`Seu plano Trevus está pausado`, "Seu plano está pausado", `A mensalidade do ${a.planos.nome} venceu em ${dataBR(a.vence_em)}. Pague para voltar a marcar sem sinal: o novo mês começa no dia do pagamento.`];
-    if (await enviar(a.email, assunto, moldura(titulo, texto, botaoPagar(url, `Pagar ${reais(a.planos.preco_centavos)}`)))) {
+      ? [`Seu plano vence amanhã`, "Seu plano vence amanhã", `A mensalidade do ${a.planos.nome} (${reais(a.planos.preco_centavos)}) vence amanhã, ${dataBR(a.vence_em)}. Sem o pagamento, o plano trava, os horários voltam a pedir sinal${multa ? ` e a mensalidade passa a ter multa de ${reais(multa)}` : ""}.`]
+      : [`Seu plano Trevus está pausado`, "Seu plano está pausado", `A mensalidade do ${a.planos.nome} venceu em ${dataBR(a.vence_em)}${multa ? ` e agora tem multa de ${reais(multa)} por atraso` : ""}. Pague para voltar a marcar sem sinal: o novo mês começa no dia do pagamento.`];
+    const valor = pg ? pg.valor_centavos : a.planos.preco_centavos;
+    if (await enviar(a.email, assunto, moldura(titulo, texto, botaoPagar(url, `Pagar ${reais(valor)}`)))) {
       await banco(`assinantes?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({ ultimo_aviso: av.chave }) });
       n++;
     }

@@ -282,20 +282,26 @@
         cx.appendChild(el('b', null, 'Plano ativo até ' + dataBR(eu.vence_em)));
         cx.appendChild(el('p', null, dias <= 10
           ? 'A mensalidade de ' + dinheiro(eu.plano_preco) + ' vence ' + (dias <= 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias') + '. Pague e o saldo renova sem interrupção.'
-          : 'Mensalidade de ' + dinheiro(eu.plano_preco) + ' todo dia ' + deIso(eu.vence_em).getDate() + '. Você recebe o link por e-mail 3 dias antes.'));
+          : 'Mensalidade de ' + dinheiro(eu.plano_preco) + ' todo dia ' + deIso(eu.vence_em).getDate() + '. Você recebe o link por e-mail 3 dias antes.') +
+          (eu.multa ? ' Depois do vencimento entra multa de ' + dinheiro(eu.multa) + '.' : '')));
         if (dias <= 10) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
       }
     } else {
       cx.classList.add('alerta');
       cx.appendChild(el('b', null, 'Plano pausado: mensalidade em aberto'));
-      cx.appendChild(el('p', null, 'Venceu em ' + dataBR(eu.vence_em) + '. Pague ' + dinheiro(eu.plano_preco) + ' para voltar a marcar sem sinal. O novo mês começa no dia do pagamento.'));
-      pagar = 'Pagar ' + dinheiro(eu.plano_preco) + ' e reativar';
+      var comMulta = eu.plano_preco + (eu.multa || 0);
+      cx.appendChild(el('p', null, 'Venceu em ' + dataBR(eu.vence_em) + '. Pague ' + dinheiro(comMulta) + (eu.multa ? ' (mensalidade + multa de ' + dinheiro(eu.multa) + ' por atraso)' : '') + ' para voltar a marcar sem sinal. O novo mês começa no dia do pagamento.'));
+      pagar = 'Pagar ' + dinheiro(comMulta) + ' e reativar';
     }
     if (pagar) {
       var ac = el('div','acoes'); ac.style.marginTop = '.9rem';
       var b = el('button','btn btn-ouro', pagar); b.type = 'button';
       b.addEventListener('click', function () { pagarMensalidade(b); });
-      ac.appendChild(b); ac.appendChild(el('span', 'pg-regras', 'Pix ou cartão, pela InfinitePay do ' + eu.barbeiro + '.'));
+      var base = eu.plano_preco + (eu.status === 'vencido' ? (eu.multa || 0) : 0);
+      var cartao = eu.cartao_pct ? Math.ceil(base * 100 / (100 - eu.cartao_pct)) : 0;
+      ac.appendChild(b); ac.appendChild(el('span', 'pg-regras', cartao
+        ? 'Pix ' + dinheiro(base) + ' ou cartão ' + dinheiro(cartao) + ' (taxa da maquininha), pela InfinitePay do ' + eu.barbeiro + '.'
+        : 'Pix ou cartão, pela InfinitePay do ' + eu.barbeiro + '.'));
       cx.appendChild(ac);
     }
   }
