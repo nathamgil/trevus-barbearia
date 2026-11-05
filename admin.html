@@ -703,7 +703,7 @@
         confirmar(corpo, 'Marcar ' + a.nome + ' como falta?' + (pago ? ' O sinal de ' + dinheiro(a.sinal) + ' fica com a barbearia.' : ''), 'Marcar falta',
           function(){ aplica(pago ? { status: 'faltou', sinal_status: 'retido' } : { status: 'faltou' }); });
       });
-      botao('Editar', function(){ formEditar(a, corpo, recarrega); });
+      botao('Mudar horário', function(){ formEditar(a, corpo, recarrega); });
       botao('Cancelar', function(){
         var tarde = deIso(a.dia).getTime() + minutos(a.inicio) * 60000 < Date.now() + 3600000;
         var txt = 'Cancelar o horário de ' + a.nome + '? Ele sai da agenda e a vaga volta para o site.';
@@ -981,7 +981,7 @@
           acoes.appendChild(pg);
         }
         var ed = el('button','btn btn-linha mini', 'Editar'); ed.type = 'button';
-        ed.addEventListener('click', function () { formEditar(a, corpo); });
+        ed.addEventListener('click', function () { formEditarAssinante(a, corpo); });
         acoes.appendChild(ed);
         if (a.status !== 'cancelado' && a.status !== 'aguardando_pagamento' && a.email) {
           var cv = el('button','btn btn-linha mini', a.tem_acesso ? 'Mandar link de senha' : 'Mandar acesso'); cv.type = 'button';
@@ -1024,7 +1024,7 @@
     ac.appendChild(sim); ac.appendChild(nao); cx.appendChild(ac); cx.appendChild(msg);
   }
 
-  function formEditar(a, corpo) {
+  function formEditarAssinante(a, corpo) {
     var cx = caixaForm(corpo, 'Editar ' + a.nome); if (!cx) return;
     function inp(tipo, val) { var i = el('input'); i.type = tipo; if (val != null) i.value = val; return i; }
     function grade() { var g = el('div','ed-grade'); cx.appendChild(g); return g; }
