@@ -278,7 +278,8 @@ async function enviarAcesso(a: any, motivo: "novo" | "pedido") {
   const titulo = motivo === "novo" ? "Bem-vindo ao plano! Crie seu acesso" : "Seu link para entrar";
   const texto = motivo === "novo"
     ? "Seu plano está ativo. Toque no botão para criar sua senha: na sua área você vê o saldo do mês, coloca sua foto e marca horário sem pagar sinal." +
-      (a.vence_em && !a.cortesia ? ` A próxima mensalidade vence dia ${dataBR(a.vence_em)} e você paga por lá mesmo, no Pix ou no cartão. Depois do vencimento entra multa por atraso.` : "")
+      (a.vence_em && !a.cortesia && a.planos?.sem_trava ? ` Seu saldo volta cheio todo dia ${Number(String(a.vence_em).slice(8, 10))}. A mensalidade você acerta com seu barbeiro ou paga por lá mesmo, no Pix ou no cartão.` : "") +
+      (a.vence_em && !a.cortesia && !a.planos?.sem_trava ? ` A próxima mensalidade vence dia ${dataBR(a.vence_em)} e você paga por lá mesmo, no Pix ou no cartão. Depois do vencimento entra multa por atraso.` : "")
     : "Toque no botão para criar uma senha nova e entrar na sua área de assinante.";
   return enviar(a.email, motivo === "novo" ? "Seu plano Trevus está ativo: crie seu acesso" : "Acesse sua área de assinante Trevus",
     moldura(titulo, texto, `<p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#D7AE4F;color:#1B1405;padding:14px 26px;border-radius:10px;font-weight:bold;text-decoration:none;display:inline-block">Criar minha senha</a></p>
@@ -316,7 +317,7 @@ async function processarPlano(id: string, transactionNsu: string, slug: string, 
 async function avisarPagamentoPlano(id: string, res: string) {
   if (!["ATIVADO", "REATIVADO", "RENOVADO"].includes(res)) return;
   const pg = await pagamentoPlano(id);
-  const a = (await banco(`assinantes?id=eq.${pg.assinante_id}&select=*,planos(nome),barbeiros(nome)`))[0];
+  const a = (await banco(`assinantes?id=eq.${pg.assinante_id}&select=*,planos(nome,sem_trava),barbeiros(nome)`))[0];
   const vence = a.proximo_pago ? new Date(new Date(a.vence_em + "T12:00:00").setMonth(new Date(a.vence_em + "T12:00:00").getMonth() + 1)).toISOString().slice(0, 10) : a.vence_em;
   if (!a.user_id) await enviarAcesso(a, "novo");
   else await enviar(a.email, `Mensalidade confirmada: ${a.planos.nome}`,
@@ -444,7 +445,7 @@ Deno.serve(async (req) => {
     if (acao === "acesso") {
       const email = String(corpo.email ?? "").trim().toLowerCase();
       if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        const a = (await banco(`assinantes?email=eq.${encodeURIComponent(email)}&status=in.(ativo,vencido)&select=*`))?.[0];
+        const a = (await banco(`assinantes?email=eq.${encodeURIComponent(email)}&status=in.(ativo,vencido)&select=*,planos(sem_trava)`))?.[0];
         if (a && (!a.acesso_enviado_em || Date.now() - new Date(a.acesso_enviado_em).getTime() > 120000))
           await enviarAcesso(a, a.user_id ? "pedido" : "novo").catch(console.error);
         else if (!a) await acessoEquipe(email).catch(console.error);
@@ -454,7 +455,7 @@ Deno.serve(async (req) => {
 
     if (acao === "convidar") {
       if (!(await eSocio(req))) return json({ erro: "Só a equipe pode mandar o acesso." }, 403);
-      const a = (await banco(`assinantes?id=eq.${encodeURIComponent(corpo.assinante_id)}&select=*`))?.[0];
+      const a = (await banco(`assinantes?id=eq.${encodeURIComponent(corpo.assinante_id)}&select=*,planos(sem_trava)`))?.[0];
       if (!a) return json({ erro: "Assinante não encontrado." }, 404);
       if (!a.email) return json({ erro: "Cadastre o e-mail do cliente antes de mandar o acesso." }, 400);
       await enviarAcesso(a, a.user_id ? "pedido" : "novo");

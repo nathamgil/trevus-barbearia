@@ -888,7 +888,7 @@
 
   /* ---------------- assinantes (planos) ---------------- */
 
-  var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas' };
+  var NOMES_COTA = { corte: 'cortes', barba: 'barbas', sobrancelha: 'sobrancelhas', acabamento: 'acabamentos' };
   var PLANOS = [], LISTA_AS = [];
   var ROT_AS = { ativo: 'Ativo', vencido: 'Vencido (em aberto)', cancelado: 'Cancelado', aguardando_pagamento: 'Compra não paga' };
   function dataBR(s){ return String(s).split('-').reverse().join('/'); }
@@ -1132,12 +1132,25 @@
     var fh = el('input'); fh.type = 'time'; fh.step = 300;
     var agora = new Date(); fh.value = deMinutos(Math.ceil((agora.getHours() * 60 + agora.getMinutes()) / 5) * 5 % 1440);
     var fdu = el('input'); fdu.type = 'number'; fdu.min = 5; fdu.max = 480; fdu.step = 5; fdu.inputMode = 'numeric'; fdu.placeholder = 'Padrão do plano';
+    // plano sem pacote fixo (ex.: corte e barba + cortes avulsos): o sócio escolhe o serviço
+    var pl = PLANOS.filter(function (p) { return p.id === a.plano_id; })[0];
+    var fs = null;
+    if (pl && !(pl.pacote && pl.pacote.length)) {
+      fs = el('select');
+      servicos.filter(function (s) {
+        return s.consome && Object.keys(s.consome).every(function (k) { return (a.cotas || {})[k] > 0; });
+      }).forEach(function (s) { var o = el('option', null, s.nome); o.value = s.id; fs.appendChild(o); });
+      if (!fs.options.length) fs = null;
+    }
+    if (fs) linha.appendChild(campoForm('Serviço', fs));
     linha.appendChild(campoForm('Barbeiro', fb)); linha.appendChild(campoForm('Dia', fd)); linha.appendChild(campoForm('Início', fh)); linha.appendChild(campoForm('Duração (min)', fdu));
     cx.appendChild(linha);
-    cx.appendChild(el('p','pg-regras','Marca o pacote do plano (' + a.plano + ') e desconta 1 atendimento do saldo do mês. Duração em branco = a soma dos serviços.'));
+    cx.appendChild(el('p','pg-regras', (fs ? 'Marca o serviço escolhido' : 'Marca o pacote do plano (' + a.plano + ')') + ' e desconta do saldo do mês. Duração em branco = a soma dos serviços.'));
     botoesForm(cx, 'Marcar', function (msg, libera) {
       var dur = parseInt(fdu.value, 10) || null;
-      sb.rpc('agendar_plano_painel', { p_assinante: a.id, p_barbeiro: fb.value, p_data: fd.value, p_inicio: fh.value, p_dur: dur }).then(function (r) {
+      var args = { p_assinante: a.id, p_barbeiro: fb.value, p_data: fd.value, p_inicio: fh.value, p_dur: dur };
+      if (fs) args.p_servicos = [fs.value];
+      sb.rpc('agendar_plano_painel', args).then(function (r) {
         if (r.error) throw new Error(r.error.hint || r.error.message);
         cx.remove(); aviso(corpo, 'aviso-ok', 'Marcado: ' + porExtenso(fd.value) + ' às ' + fh.value + '.');
         setTimeout(pintaAssinantes, 1800);
@@ -1289,7 +1302,7 @@
       var sq = $('#as-quem'); sq.innerHTML = '';
       barbeiros.forEach(function (b) { var o = el('option', null, b.nome); o.value = b.id; sq.appendChild(o); });
       if (eu) sq.value = eu.id;
-      if (!DEMO) sb.from('planos').select('id,nome,preco_centavos,cotas,ativo').order('ordem').then(resp).then(function (l) {
+      if (!DEMO) sb.from('planos').select('id,nome,preco_centavos,cotas,ativo,pacote').order('ordem').then(resp).then(function (l) {
         PLANOS = l;
         var s = $('#as-plano'); s.innerHTML = '';
         l.filter(function (p) { return p.ativo; }).forEach(function (p) { var o = el('option', null, p.nome + ' · ' + dinheiro(p.preco_centavos)); o.value = p.id; s.appendChild(o); });

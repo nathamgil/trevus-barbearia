@@ -172,7 +172,7 @@
   var SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   var SEM3 = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  var NOMES_COTA = { corte: ['Corte', 'Cortes'], barba: ['Barba', 'Barbas'], sobrancelha: ['Sobrancelha', 'Sobrancelhas'] };
+  var NOMES_COTA = { corte: ['Corte', 'Cortes'], barba: ['Barba', 'Barbas'], sobrancelha: ['Sobrancelha', 'Sobrancelhas'], acabamento: ['Acabamento', 'Acabamentos'] };
 
   function $(s){ return document.querySelector(s); }
   function el(t,c,x){ var n=document.createElement(t); if(c)n.className=c; if(x!=null)n.textContent=x; return n; }
@@ -278,6 +278,11 @@
       if (eu.proximo_pago) {
         cx.appendChild(el('b', null, 'Plano ativo · próximo mês já pago'));
         cx.appendChild(el('p', null, 'Garantido até ' + dataBR(maisUmMes(eu.vence_em)) + '. O saldo renova sozinho em ' + dataBR(eu.vence_em) + '.'));
+      } else if (eu.sem_trava) {
+        var diaV = deIso(eu.vence_em).getDate();
+        cx.appendChild(el('b', null, 'Plano ativo · renova todo dia ' + diaV));
+        cx.appendChild(el('p', null, 'Seu saldo volta cheio todo dia ' + diaV + '. Mensalidade de ' + dinheiro(eu.plano_preco) + ': acerte com o ' + eu.barbeiro + ' ou pague por aqui.'));
+        if (dias <= 10) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
       } else {
         cx.appendChild(el('b', null, 'Plano ativo até ' + dataBR(eu.vence_em)));
         cx.appendChild(el('p', null, (dias <= 10
