@@ -323,6 +323,11 @@
   function pintaSaldo() {
     var cx = $('#saldos'); cx.innerHTML = '';
     $('#bloco-saldo').hidden = eu.status !== 'ativo';
+    if (eu.ilimitado) {
+      var bi = el('div','saldo'); bi.appendChild(el('span', null, 'Atendimentos'));
+      bi.appendChild(el('b', null, 'Ilimitado')); bi.appendChild(el('small', null, 'marque quantas vezes precisar'));
+      cx.appendChild(bi); return;
+    }
     if (eu.pacote && eu.pacote.length) {
       var ks = Object.keys(eu.cotas || {});
       var tot = Math.min.apply(null, ks.map(function (k) { return eu.cotas[k]; }));
@@ -468,11 +473,18 @@
     var box = el('div','resumo'); box.style.marginTop = '1.2rem';
     box.appendChild(el('p', null, porExtenso(escolha.dia) + ' às ' + h + ' com ' + nomeBarbAtual()));
     box.appendChild(el('p', 'sub', escolha.servicos.map(function (s) { return s.nome; }).join(' + ') + ' · pelo plano, sem sinal'));
+    var pq = null;
+    if (eu.ilimitado) {
+      var cpq = el('div','campo'); cpq.style.marginTop = '.8rem';
+      var lpq = el('label', null, 'Pra quem é o corte?'); lpq.htmlFor = 'mc-praquem';
+      pq = el('input'); pq.id = 'mc-praquem'; pq.type = 'text'; pq.maxLength = 60; pq.placeholder = 'Ex: João (deixe vazio se for você)';
+      cpq.appendChild(lpq); cpq.appendChild(pq); box.appendChild(cpq);
+    }
     var ac = el('div','acoes');
     var b = el('button','btn btn-ouro','Confirmar horário'); b.type = 'button';
     b.addEventListener('click', function () {
       b.disabled = true; b.textContent = 'Confirmando…';
-      sb.rpc('agendar_pelo_plano', { p_servicos: idsEscolhidos(), p_data: escolha.dia, p_inicio: h, p_barbeiro: barbAtual() }).then(function (r) {
+      sb.rpc('agendar_pelo_plano', { p_servicos: idsEscolhidos(), p_data: escolha.dia, p_inicio: h, p_barbeiro: barbAtual(), p_obs: pq && pq.value.trim() ? 'Corte de ' + pq.value.trim() : null }).then(function (r) {
         if (r.error) throw new Error(erroDe(r));
         funcao('confirmado', { agendamento_id: r.data[0].id }).catch(function () {});
         return carregaConta().then(function () {

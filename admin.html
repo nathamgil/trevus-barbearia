@@ -27,6 +27,20 @@
   .aba{padding:.75rem 1.1rem;font-size:.9rem;font-weight:700;color:var(--cinza);border-bottom:2px solid transparent;white-space:nowrap;min-height:44px}
   .aba[aria-selected="true"]{color:var(--ouro);border-bottom-color:var(--ouro)}
   .aba .bolinha{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:99px;background:var(--vermelho);color:#fff;font-size:.72rem;margin-left:.35rem;padding:0 5px}
+  .mat-listas{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.2rem}
+  .mat-topo{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.6rem}
+  .mat-topo h4{margin:0;font-size:1.05rem}
+  .mat-conta{font-size:.82rem;font-weight:800;color:var(--cinza)}
+  .mat-conta.tem{color:#ff8a80}
+  .mat-item{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-top:1px solid var(--borda)}
+  .mat-item:first-of-type{border-top:0}
+  .mat-tog{flex:1;display:flex;align-items:center;gap:.6rem;text-align:left;min-height:44px;padding:.3rem .2rem;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .mat-tog .selo{flex:none;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:.25rem .55rem;border-radius:99px;background:rgba(120,200,140,.15);color:#8fd6a0;border:1px solid rgba(120,200,140,.35)}
+  .mat-item.comprar .selo{background:rgba(255,110,100,.15);color:#ff8a80;border-color:rgba(255,110,100,.45)}
+  .mat-item.comprar .mat-nome{font-weight:800}
+  .mat-rm{flex:none;width:44px;height:44px;border-radius:10px;background:none;border:1px solid var(--borda);color:var(--cinza);font-size:1.1rem;cursor:pointer}
+  .mat-novo{display:flex;gap:.5rem;margin-top:.8rem}
+  .mat-novo input{flex:1;min-width:0}
   .painel-aba{display:none} .painel-aba[data-ativa]{display:block}
   .login{max-width:24rem;margin:5rem auto}
   .filtro{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1rem}
@@ -138,6 +152,7 @@
       <button class="aba" role="tab" aria-selected="false" data-aba="proximos">Próximos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="folgas">Folgas e feriados</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="assinantes">Assinantes</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="materiais">Materiais</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="master" id="aba-master" hidden>Visão geral</button>
     </div>
 
@@ -269,6 +284,13 @@
       <div class="cartao" style="margin-top:1rem" id="mt-assinantes"></div>
       <h3 style="margin-top:2rem">Todos os agendamentos do período</h3>
       <div class="cartao" style="margin-top:1rem;overflow-x:auto" id="mt-agendamentos"></div>
+    </section>
+
+    <!-- aba: materiais -->
+    <section class="painel-aba" data-painel="materiais">
+      <h3>Materiais</h3>
+      <p class="sub" style="margin-top:.5rem">Toque no item para marcar se precisa comprar. O que é da barbearia todo mundo vê e divide; cada sócio tem a lista dele.</p>
+      <div class="mat-listas" id="mat-listas"></div>
     </section>
 
     <!-- aba: assinantes -->
@@ -516,6 +538,7 @@
     if (aba === 'folgas') { pintaBloqueios(); pintaFeriados(); }
     if (aba === 'assinantes') pintaAssinantes();
     if (aba === 'master') pintaMaster();
+    if (aba === 'materiais') pintaMateriais();
   }
 
   /* ---------------- sinais a devolver ---------------- */
@@ -805,6 +828,62 @@
   });
 
   var ROT_STATUS = { confirmado: 'Marcado', concluido: 'Atendido', faltou: 'Não veio', cancelado: 'Cancelado', pix_abandonado: 'Pix não pago', aguardando_pagamento: 'Pagando agora' };
+
+  /* ---------------- materiais ---------------- */
+  function pintaMateriais() {
+    var cx = $('#mat-listas'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
+    if (DEMO) { cx.innerHTML = ''; return aviso(cx, 'aviso-neutro', 'No modo demonstração a lista de materiais não fica salva.'); }
+    sb.from('materiais').select('id,barbeiro_id,nome,comprar').order('criado_em').then(function (r) {
+      if (r.error) throw new Error(r.error.message);
+      cx.innerHTML = '';
+      var donos = [{ id: null, nome: 'Da barbearia (todos)' }].concat(
+        barbeiros.filter(function (b) { return !filtro || b.id === filtro; })
+          .map(function (b) { return { id: b.id, nome: b.id === filtro ? 'Meus materiais · ' + b.nome : 'Materiais do ' + b.nome }; }));
+      donos.forEach(function (d) {
+        var itens = r.data.filter(function (m) { return (m.barbeiro_id || null) === d.id; })
+          .sort(function (a, b) { return (b.comprar - a.comprar) || a.nome.localeCompare(b.nome); });
+        var card = el('div','cartao');
+        var topo = el('div','mat-topo'); topo.appendChild(el('h4', null, d.nome));
+        var n = itens.filter(function (m) { return m.comprar; }).length;
+        topo.appendChild(el('span', 'mat-conta' + (n ? ' tem' : ''), n ? n + ' pra comprar' : 'nada pra comprar'));
+        card.appendChild(topo);
+        if (!itens.length) card.appendChild(el('p','vazio','Nenhum item ainda.'));
+        itens.forEach(function (m) {
+          var li = el('div','mat-item' + (m.comprar ? ' comprar' : ''));
+          var t = el('button','mat-tog'); t.type = 'button';
+          t.setAttribute('aria-pressed', m.comprar ? 'true' : 'false');
+          t.appendChild(el('span','selo', m.comprar ? 'Comprar' : 'Tem'));
+          t.appendChild(el('span','mat-nome', m.nome));
+          t.addEventListener('click', function () {
+            t.disabled = true;
+            sb.from('materiais').update({ comprar: !m.comprar, atualizado_em: new Date().toISOString() }).eq('id', m.id)
+              .then(function (u) { if (u.error) throw new Error(u.error.message); pintaMateriais(); })
+              .catch(function (e) { t.disabled = false; aviso(card, 'aviso-erro', e.message); });
+          });
+          var rm = el('button','mat-rm','×'); rm.type = 'button'; rm.setAttribute('aria-label', 'Tirar ' + m.nome + ' da lista');
+          rm.addEventListener('click', function () {
+            confirmar(card, 'Tirar "' + m.nome + '" da lista?', 'Tirar', function () {
+              sb.from('materiais').delete().eq('id', m.id).then(function () { pintaMateriais(); });
+            });
+          });
+          li.appendChild(t); li.appendChild(rm); card.appendChild(li);
+        });
+        var f = el('form','mat-novo');
+        var inp = el('input'); inp.type = 'text'; inp.maxLength = 80; inp.placeholder = 'Novo item'; inp.setAttribute('aria-label', 'Novo item em ' + d.nome);
+        var add = el('button','btn btn-ouro mini','Adicionar'); add.type = 'submit';
+        f.appendChild(inp); f.appendChild(add);
+        f.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          var nome = inp.value.trim(); if (!nome) return;
+          add.disabled = true;
+          sb.from('materiais').insert({ barbeiro_id: d.id, nome: nome, comprar: true }).then(function (u) {
+            if (u.error) throw new Error(u.error.message); pintaMateriais();
+          }).catch(function (e) { add.disabled = false; aviso(card, 'aviso-erro', e.message); });
+        });
+        card.appendChild(f); cx.appendChild(card);
+      });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
 
   function pintaMaster() {
     if (!GESTOR) return;
