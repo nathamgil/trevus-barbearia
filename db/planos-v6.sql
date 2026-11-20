@@ -91,10 +91,11 @@ $$;
 revoke all on function public.meu_plano() from public, anon, authenticated;
 grant execute on function public.meu_plano() to authenticated;
 
--- o Natham (Parceria Zync): ilimitado e escolhe o serviço a cada marcação
--- (corte, barba, corte e barba, sobrancelha), já que marca também pra família.
+-- o Natham (Parceria Zync): ilimitado; toda marcação é o pacote completo
+-- (corte e barba + sobrancelha), inclusive as da família.
 update public.assinantes set ilimitado = true where lower(email) = 'nathamgil10@gmail.com';
-update public.planos set pacote = null where slug = 'parceria';
+update public.planos set pacote = array(select id from public.servicos where slug in ('corte-barba','sobrancelha') order by ordem)
+ where slug = 'parceria';
 
 -- conferência
 select a.nome, a.email, p.nome plano, a.ilimitado, public.saldo_plano(a.id) saldo
