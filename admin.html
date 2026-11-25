@@ -1434,7 +1434,7 @@
     if (s1 !== s2) return aviso(cx, 'aviso-erro', 'As duas senhas não estão iguais.');
     aviso(cx, 'aviso-neutro', 'Salvando…');
     sb.auth.updateUser({ password: s1 }).then(function (r) {
-      if (r.error) return aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Peça um link novo na tela de entrada.');
+      if (r.error) return aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Peça um link novo na tela de entrada. (detalhe: ' + String(r.error.message || '').slice(0, 80) + ')');
       cx.innerHTML = '';
       abrePainel(r.data.user.id);
     });

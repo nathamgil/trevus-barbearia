@@ -578,10 +578,25 @@
     if (s1.length < 8) return aviso(cx, 'aviso-erro', 'A senha precisa ter pelo menos 8 caracteres.');
     if (s1 !== s2) return aviso(cx, 'aviso-erro', 'As duas senhas não estão iguais.');
     aviso(cx, 'aviso-neutro', 'Salvando…');
-    sb.auth.updateUser({ password: s1 }).then(function (r) {
-      if (r.error) return aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Peça um link novo na tela de entrada.');
+    // tenta 2 vezes: no iPhone a 1ª às vezes falha antes de sair do aparelho
+    function salva(n) {
+      return sb.auth.getSession().then(function () { return sb.auth.updateUser({ password: s1 }); }).then(function (r) {
+        if (r.error && n < 2 && !/weak|same|should/i.test(r.error.message || '')) {
+          return new Promise(function (ok) { setTimeout(ok, 1200); }).then(function () { return sb.auth.refreshSession(); }).then(function () { return salva(n + 1); });
+        }
+        return r;
+      });
+    }
+    salva(1).then(function (r) {
+      if (r.error) {
+        var m = r.error.message || '';
+        var txt = /weak|should/i.test(m) ? 'Essa senha é fraca demais. Use letras e números, sem sequências.'
+          : /same/i.test(m) ? 'Essa já é a sua senha. Toque em Sair e entre com ela.'
+          : 'Não consegui salvar a senha. Peça um link novo na tela de entrada.';
+        return aviso(cx, 'aviso-erro', txt + ' (detalhe: ' + m.slice(0, 80) + ')');
+      }
       cx.innerHTML = ''; carregaConta();
-    });
+    }).catch(function (e) { aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Tente de novo em instantes. (detalhe: ' + String(e && e.message || e).slice(0, 80) + ')'); });
   });
   $('#form-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
