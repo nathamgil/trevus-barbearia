@@ -184,7 +184,7 @@
     },
     servicos: function () {
       if (DEMO) return Promise.resolve(CFG.servicosDemo.slice());
-      return tabela('servicos?select=*&ativo=eq.true&order=ordem.asc');
+      return tabela('servicos?select=*&ativo=eq.true&so_plano=eq.false&order=ordem.asc');
     },
     dias: function (servicos, barbeiro) {
       if (DEMO) {

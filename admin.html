@@ -1217,7 +1217,7 @@
     if (pl && !(pl.pacote && pl.pacote.length)) {
       fs = el('select');
       servicos.filter(function (s) {
-        return s.consome && Object.keys(s.consome).every(function (k) { return (a.cotas || {})[k] > 0; });
+        return !s.so_plano && s.consome && Object.keys(s.consome).every(function (k) { return (a.cotas || {})[k] > 0; });
       }).forEach(function (s) { var o = el('option', null, s.nome); o.value = s.id; fs.appendChild(o); });
       if (!fs.options.length) fs = null;
     }
@@ -1364,7 +1364,7 @@
         if (eu) s.value = eu.id;
       });
       var cs = $('#bc-servicos'); cs.innerHTML = '';
-      servicos.forEach(function (s) {
+      servicos.filter(function (s) { return !s.so_plano; }).forEach(function (s) {
         var l = el('label'); var c = el('input'); c.type = 'checkbox'; c.id = 'bc-s-' + s.id;
         c.addEventListener('change', function () {
           var soma = servicos.filter(function (x) { var k = document.getElementById('bc-s-' + x.id); return k && k.checked; })

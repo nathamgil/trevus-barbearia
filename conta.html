@@ -281,8 +281,10 @@
       } else if (eu.sem_trava) {
         var diaV = deIso(eu.vence_em).getDate();
         cx.appendChild(el('b', null, 'Plano ativo · renova todo dia ' + diaV));
-        cx.appendChild(el('p', null, 'Seu saldo volta cheio todo dia ' + diaV + '. Mensalidade de ' + dinheiro(eu.plano_preco) + ': acerte com o ' + eu.barbeiro + ' ou pague por aqui.'));
-        if (dias <= 10) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
+        cx.appendChild(el('p', null, 'Seu saldo volta cheio todo dia ' + diaV + '. ' + (eu.plano_preco > 0
+          ? 'Mensalidade de ' + dinheiro(eu.plano_preco) + ': acerte com o ' + eu.barbeiro + ' ou pague por aqui.'
+          : 'A mensalidade você acerta direto com o ' + eu.barbeiro + '.')));
+        if (dias <= 10 && eu.plano_preco > 0) pagar = 'Pagar mensalidade (' + dinheiro(eu.plano_preco) + ')';
       } else {
         cx.appendChild(el('b', null, 'Plano ativo até ' + dataBR(eu.vence_em)));
         cx.appendChild(el('p', null, (dias <= 10
@@ -390,7 +392,7 @@
     pintaBarbeiros();
     var cx = $('#mc-servicos'); cx.innerHTML = '<div class="carregando">Carregando…</div>';
     (servicos.length ? Promise.resolve({ data: servicos }) :
-      sb.from('servicos').select('id,nome,duracao_min,consome,so_barbeiros,ordem').eq('ativo', true).order('ordem')
+      sb.from('servicos').select('id,nome,duracao_min,consome,so_barbeiros,so_plano,ordem').eq('ativo', true).order('ordem')
     ).then(function (r) {
       if (r.error) throw new Error(erroDe(r));
       servicos = r.data;
@@ -406,7 +408,7 @@
         pintaDias();
         return;
       }
-      servicos.filter(cobre).filter(function (s) { return !s.so_barbeiros || !eu.barbeiro_id || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
+      servicos.filter(cobre).filter(function (s) { return !s.so_plano; }).filter(function (s) { return !s.so_barbeiros || !eu.barbeiro_id || s.so_barbeiros.indexOf(eu.barbeiro_id) >= 0; })
         .forEach(function (s) {
           var bt = el('button','opcao opcao-multi'); bt.type = 'button'; bt.setAttribute('aria-pressed','false');
           bt.appendChild(el('span','caixinha'));
