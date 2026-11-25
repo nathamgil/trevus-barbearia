@@ -271,7 +271,11 @@ async function enviarAcesso(a: any, motivo: "novo" | "pedido") {
   let g = await gerar("invite");
   if (!g.ok) g = await gerar("recovery");          // já tem login
   if (!g.ok) throw new Error("Não consegui gerar o link de acesso.");
-  const link = g.corpo.action_link ?? g.corpo.properties?.action_link;
+  // Link com token_hash: só é gasto quando o cliente salva a senha na página
+  // (leitor de link / prévia do e-mail não consome mais o acesso).
+  const th = g.corpo.properties?.hashed_token ?? g.corpo.hashed_token;
+  const tp = (g.corpo.properties?.verification_type ?? g.corpo.verification_type) === "invite" ? "invite" : "recovery";
+  const link = th ? `${destino}?th=${encodeURIComponent(th)}&tp=${tp}` : (g.corpo.action_link ?? g.corpo.properties?.action_link);
   const userId = g.corpo.id ?? g.corpo.user?.id;
   await banco(`assinantes?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({
     acesso_enviado_em: new Date().toISOString(), ...(userId && !a.user_id ? { user_id: userId } : {}) }) });

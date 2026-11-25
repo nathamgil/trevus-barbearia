@@ -204,6 +204,7 @@
   var tipoLink = hashLink.get('type'), erroLink = hashLink.get('error_code') || hashLink.get('error');
   var busca = new URLSearchParams(location.search);
   var voltaPlano = busca.get('plano');
+  var thLink = busca.get('th'), tpLink = busca.get('tp') === 'invite' ? 'invite' : 'recovery';
   sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {
     auth: { storage: window.TV_ARMAZEM, persistSession: true, autoRefreshToken: true }
   });
@@ -578,6 +579,11 @@
     if (s1.length < 8) return aviso(cx, 'aviso-erro', 'A senha precisa ter pelo menos 8 caracteres.');
     if (s1 !== s2) return aviso(cx, 'aviso-erro', 'As duas senhas não estão iguais.');
     aviso(cx, 'aviso-neutro', 'Salvando…');
+    // link novo (?th=): o acesso só é confirmado agora, no toque do cliente
+    var antes = thLink ? sb.auth.verifyOtp({ token_hash: thLink, type: tpLink }).then(function (v) {
+      if (v.error) throw { link: true, message: v.error.message };
+      thLink = null; history.replaceState(null, '', 'conta.html');
+    }) : Promise.resolve();
     // tenta 2 vezes: no iPhone a 1ª às vezes falha antes de sair do aparelho
     function salva(n) {
       return sb.auth.getSession().then(function () { return sb.auth.updateUser({ password: s1 }); }).then(function (r) {
@@ -587,7 +593,7 @@
         return r;
       });
     }
-    salva(1).then(function (r) {
+    antes.then(function () { return salva(1); }).then(function (r) {
       if (r.error) {
         var m = r.error.message || '';
         var txt = /weak|should/i.test(m) ? 'Essa senha é fraca demais. Use letras e números, sem sequências.'
@@ -596,7 +602,13 @@
         return aviso(cx, 'aviso-erro', txt + ' (detalhe: ' + m.slice(0, 80) + ')');
       }
       cx.innerHTML = ''; carregaConta();
-    }).catch(function (e) { aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Tente de novo em instantes. (detalhe: ' + String(e && e.message || e).slice(0, 80) + ')'); });
+    }).catch(function (e) {
+      if (e && e.link) {
+        aviso(cx, 'aviso-erro', 'Esse link venceu ou um mais novo foi enviado. Abra o e-mail mais recente ou peça outro na tela de entrada.');
+        var v = el('button', 'btn btn-linha btn-bloco', 'Pedir link novo'); v.type = 'button'; v.style.marginTop = '.6rem';
+        v.addEventListener('click', function () { location.href = 'conta.html'; }); cx.appendChild(v); return;
+      }
+      aviso(cx, 'aviso-erro', 'Não consegui salvar a senha. Tente de novo em instantes. (detalhe: ' + String(e && e.message || e).slice(0, 80) + ')'); });
   });
   $('#form-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
@@ -611,6 +623,10 @@
 
   sb.auth.getSession().then(function (r) {
     var s = r.data && r.data.session;
+    if (thLink) {
+      $('#senha-quem').textContent = 'Escolha uma senha com pelo menos 8 caracteres. Depois é só entrar com seu e-mail e essa senha.';
+      return mostra('#tela-senha');
+    }
     if (s && (tipoLink === 'invite' || tipoLink === 'recovery')) {
       $('#senha-quem').textContent = 'Acesso de ' + s.user.email + '. Escolha uma senha com pelo menos 8 caracteres.';
       $('#btn-sair').hidden = false;
