@@ -78,6 +78,79 @@
   .mt-tabela{width:100%;border-collapse:collapse;font-size:.88rem;min-width:560px}
   .mt-tabela th{text-align:left;color:var(--cinza);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .4rem;border-bottom:1px solid var(--borda)}
   .mt-tabela td{padding:.55rem .4rem;border-bottom:1px solid var(--borda);vertical-align:top}
+
+  /* ---- Meus números ---- */
+  .nm-hero{position:relative;overflow:hidden;border-radius:22px;padding:1.6rem 1.6rem 1.4rem;margin:.4rem 0 1rem;
+    background:radial-gradient(120% 140% at 100% 0%,rgba(215,174,79,.22) 0%,rgba(215,174,79,0) 55%),linear-gradient(160deg,var(--musgo),var(--mata));
+    border:1px solid var(--ouro-fundo);box-shadow:0 30px 70px -40px #000}
+  .nm-hero .nm-quem{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem}
+  .nm-hero .nm-quem img{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:50% 22%;border:2px solid var(--ouro)}
+  .nm-hero .nm-quem span{font-size:.75rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--ouro)}
+  .nm-hero .nm-quem b{display:block;font-family:var(--display);font-size:1.1rem;color:var(--creme);letter-spacing:.04em}
+  .nm-rot{font-size:.95rem;color:var(--cinza);margin:0}
+  .nm-valor{font-family:var(--display);font-size:clamp(2.4rem,9vw,3.6rem);line-height:1.05;margin:.2rem 0 .6rem;
+    background:var(--ouro-gradiente);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--ouro)}
+  .nm-sub{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+  .nm-pilula{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;border-radius:100px;font-size:.85rem;font-weight:700;
+    background:rgba(245,241,230,.06);border:1px solid var(--borda);color:var(--creme)}
+  .nm-pilula.sobe{color:#7FE3A5;border-color:rgba(127,227,165,.35);background:rgba(127,227,165,.08)}
+  .nm-pilula.desce{color:#F29A95;border-color:rgba(224,101,96,.4);background:rgba(224,101,96,.08)}
+  .nm-meta{font-size:.82rem;color:var(--cinza);display:flex;justify-content:space-between;gap:.6rem;margin-bottom:.35rem}
+  .nm-meta b{color:var(--ouro-claro)}
+  .nm-barra{height:10px;border-radius:10px;background:rgba(245,241,230,.08);overflow:hidden}
+  .nm-barra i{display:block;height:100%;border-radius:10px;background:var(--ouro-gradiente)}
+  .nm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem;margin-bottom:1rem}
+  .nm-kpi{background:var(--mata);border:1px solid var(--borda);border-radius:16px;padding:1rem 1.05rem;display:flex;gap:.75rem;align-items:flex-start}
+  .nm-kpi .ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(215,174,79,.12);color:var(--ouro)}
+  .nm-kpi b{display:block;font-family:var(--display);font-size:1.45rem;color:var(--creme);line-height:1.1}
+  .nm-kpi span{font-size:.82rem;color:var(--cinza)}
+  .nm-kpi small{display:block;font-size:.75rem;color:var(--ouro-claro);margin-top:.15rem}
+  .nm-bloco{background:var(--mata);border:1px solid var(--borda);border-radius:18px;padding:1.2rem 1.2rem 1rem;margin-bottom:1rem;min-width:0}
+  .nm-bloco h3{font-family:var(--display);font-size:1.1rem;color:var(--creme);margin:0 0 .2rem;letter-spacing:.03em}
+  .nm-bloco .nm-dica{font-size:.85rem;color:var(--cinza);margin:0 0 .9rem}
+  .nm-dupla{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media (max-width:760px){.nm-dupla{grid-template-columns:1fr}}
+  .nm-grafico svg{width:100%;height:auto;display:block}
+  .nm-legenda{display:flex;gap:1rem;flex-wrap:wrap;font-size:.8rem;color:var(--cinza);margin-top:.5rem}
+  .nm-legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:.35rem;vertical-align:-1px}
+  .nm-hbar{margin-bottom:.7rem}
+  .nm-hbar > div:first-child{display:flex;justify-content:space-between;gap:.6rem;font-size:.9rem;margin-bottom:.3rem}
+  .nm-hbar > div:first-child b{color:var(--ouro-claro);white-space:nowrap}
+  .nm-hbar .nm-barra{height:8px}
+  .nm-semana{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;height:160px;margin-top:.4rem}
+  .nm-semana > div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:.3rem;font-size:.78rem;color:var(--cinza)}
+  .nm-semana .col{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+  .nm-semana .col i{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:rgba(215,174,79,.28);min-height:4px}
+  .nm-semana .topo .col i{background:var(--ouro-gradiente)}
+  .nm-semana .topo{color:var(--ouro-claro);font-weight:800}
+  .nm-podio{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;align-items:end;margin:1.2rem 0 1rem}
+  .nm-pd{text-align:center;border-radius:18px;padding:1rem .7rem .9rem;border:1px solid var(--borda);background:var(--musgo);position:relative}
+  .nm-pd.p1{border-color:var(--ouro);background:linear-gradient(180deg,rgba(215,174,79,.18),var(--musgo));padding-top:1.5rem}
+  .nm-pd .med{width:54px;height:54px;margin:0 auto .5rem;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.25rem;font-weight:700;color:#1B1405}
+  .nm-pd.p1 .med{width:66px;height:66px;font-size:1.5rem;background:var(--ouro-gradiente);box-shadow:0 0 0 5px rgba(215,174,79,.18)}
+  .nm-pd.p2 .med{background:linear-gradient(160deg,#F4F4F4,#9EA6AB)}
+  .nm-pd.p3 .med{background:linear-gradient(160deg,#F0C39A,#A0612F)}
+  .nm-pd .coroa{position:absolute;top:-15px;left:50%;transform:translateX(-50%);color:var(--ouro);line-height:0}
+  .nm-pd b{display:block;font-size:.95rem;line-height:1.25;word-break:break-word}
+  .nm-pd .lin{display:block;font-size:.8rem;color:var(--cinza);margin-top:.2rem}
+  .nm-pd strong{display:block;font-family:var(--display);color:var(--ouro-claro);font-size:1.15rem;margin-top:.3rem}
+  .nm-pd .btn{margin-top:.7rem;width:100%;justify-content:center}
+  @media (max-width:560px){
+    .nm-podio{grid-template-columns:1fr}
+    .nm-pd{display:grid;grid-template-columns:auto 1fr;text-align:left;column-gap:.85rem;align-items:center;padding:1rem}
+    .nm-pd.p1{padding-top:1rem}
+    .nm-pd .med,.nm-pd.p1 .med{margin:0;grid-row:span 5;width:54px;height:54px;font-size:1.2rem}
+    .nm-pd .coroa{left:2.05rem;top:-13px}
+    .nm-pd .btn{grid-column:1/-1}
+  }
+  .nm-lista{list-style:none;margin:0;padding:0}
+  .nm-lista li{display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-top:1px solid var(--borda)}
+  .nm-lista .pos{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:800;background:rgba(245,241,230,.06);color:var(--cinza)}
+  .nm-lista .q{flex:1;min-width:0}
+  .nm-lista .q b{display:block;font-size:.95rem}
+  .nm-lista .q span{font-size:.8rem;color:var(--cinza)}
+  .nm-tag{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:.1rem .45rem;border-radius:6px;background:rgba(215,174,79,.14);color:var(--ouro-claro);margin-left:.4rem;vertical-align:2px}
+  .nm-nota{font-size:.8rem;color:var(--cinza-fraco);margin-top:.6rem;line-height:1.5}
 </style>
 </head>
 <body>
@@ -148,6 +221,7 @@
 
     <div class="abas" role="tablist">
       <button class="aba" role="tab" aria-selected="true"  data-aba="dia">Dia</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="numeros">Meus números</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="balcao">Lançar cliente</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="proximos">Próximos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="folgas">Folgas e feriados</button>
@@ -264,6 +338,19 @@
           <div class="cartao" style="margin-top:1rem" id="lista-feriados"></div>
         </div>
       </div>
+    </section>
+
+    <!-- aba: meus números (cada barbeiro vê o dele) -->
+    <section class="painel-aba" data-painel="numeros">
+      <div class="filtro" id="nm-quem" aria-label="Ver os números de" hidden></div>
+      <div class="filtro" id="nm-periodo" aria-label="Período">
+        <button type="button" class="todos" data-p="mes" aria-pressed="true">Este mês</button>
+        <button type="button" class="todos" data-p="mespassado">Mês passado</button>
+        <button type="button" class="todos" data-p="7">Últimos 7 dias</button>
+        <button type="button" class="todos" data-p="3m">Últimos 3 meses</button>
+        <button type="button" class="todos" data-p="ano">Este ano</button>
+      </div>
+      <div id="nm-corpo"></div>
     </section>
 
     <!-- aba: visão geral (painel master, só gestor) -->
@@ -538,6 +625,7 @@
     if (aba === 'folgas') { pintaBloqueios(); pintaFeriados(); }
     if (aba === 'assinantes') pintaAssinantes();
     if (aba === 'master') pintaMaster();
+    if (aba === 'numeros') pintaNumeros();
     if (aba === 'materiais') pintaMateriais();
   }
 
@@ -828,6 +916,208 @@
   });
 
   var ROT_STATUS = { confirmado: 'Marcado', concluido: 'Atendido', faltou: 'Não veio', cancelado: 'Cancelado', pix_abandonado: 'Pix não pago', aguardando_pagamento: 'Pagando agora' };
+
+  /* ---------------- meus números (barbeiro) ---------------- */
+  var nmPeriodo = 'mes', nmBarbeiro = null;
+  var NM_MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var NM_SEM = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var NM_SEM_L = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  var NM_IC = {
+    tesoura: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>',
+    ticket: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    gente: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    estrela: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>',
+    agenda: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    falta: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+    coroa: '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z"/></svg>'
+  };
+
+  function faixaNumeros() {
+    var h = new Date(), ini, fim, rot, ant;
+    if (nmPeriodo === 'mes') { ini = new Date(h.getFullYear(), h.getMonth(), 1); fim = new Date(h.getFullYear(), h.getMonth() + 1, 0); rot = 'em ' + NM_MESES[h.getMonth()]; ant = NM_MESES[(h.getMonth() + 11) % 12]; }
+    else if (nmPeriodo === 'mespassado') { ini = new Date(h.getFullYear(), h.getMonth() - 1, 1); fim = new Date(h.getFullYear(), h.getMonth(), 0); rot = 'em ' + NM_MESES[ini.getMonth()]; ant = NM_MESES[(ini.getMonth() + 11) % 12]; }
+    else if (nmPeriodo === '7') { fim = new Date(h); ini = new Date(h); ini.setDate(h.getDate() - 6); rot = 'nos últimos 7 dias'; ant = 'os 7 dias antes'; }
+    else if (nmPeriodo === '3m') { fim = new Date(h); ini = new Date(h.getFullYear(), h.getMonth() - 2, 1); rot = 'nos últimos 3 meses'; ant = 'os 3 meses antes'; }
+    else { ini = new Date(h.getFullYear(), 0, 1); fim = new Date(h); rot = 'em ' + h.getFullYear(); ant = 'o período anterior'; }
+    return { ini: iso(ini), fim: iso(fim), rot: rot, ant: ant };
+  }
+  function reais(c) { return 'R$ ' + Math.round((c || 0) / 100).toLocaleString('pt-BR'); }
+  function iniciais(n) { return String(n || '?').trim().split(/\s+/).slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join(''); }
+  function primeiroNome(n) { var p = String(n || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); }
+  function linkMimo(c, barbeiro) {
+    var tel = soDigitos(c.telefone); if (tel.length < 10) return null;
+    var txt = 'Fala, ' + primeiroNome(c.nome) + '! Aqui é o ' + primeiroNome(barbeiro) + ' da Trevus 🍀 Você tá entre os clientes que mais cortaram comigo esse mês e separei um mimo pra você na próxima visita. Valeu demais pela parceria!';
+    return 'https://wa.me/55' + tel.replace(/^55/, '') + '?text=' + encodeURIComponent(txt);
+  }
+
+  function pintaQuemNumeros() {
+    var cx = $('#nm-quem'), ativos = barbeiros.filter(function (b) { return b.ativo !== false; });
+    if (!GESTOR) { cx.hidden = true; return; }
+    cx.hidden = false; cx.innerHTML = '';
+    if (!nmBarbeiro) nmBarbeiro = (ativos[0] || {}).id;
+    ativos.forEach(function (b) {
+      var bt = el('button'); bt.type = 'button'; bt.setAttribute('aria-pressed', b.id === nmBarbeiro ? 'true' : 'false');
+      if (b.foto) { var im = el('img'); im.src = b.foto; im.alt = ''; bt.appendChild(im); } else bt.className = 'todos';
+      bt.appendChild(document.createTextNode(b.nome));
+      bt.addEventListener('click', function () { nmBarbeiro = b.id; pintaNumeros(); });
+      cx.appendChild(bt);
+    });
+  }
+
+  function graficoDias(dias, hoje) {
+    var W = 720, H = 220, top = 20, base = 188, n = dias.length || 1;
+    var max = Math.max.apply(null, dias.map(function (d) { return d.valor; }).concat([1]));
+    var passo = W / n, larg = Math.max(2, Math.min(26, passo * 0.68));
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Faturamento por dia"><defs>' +
+      '<linearGradient id="nmg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3DB94"/><stop offset=".55" stop-color="#D7AE4F"/><stop offset="1" stop-color="#8F6A1C"/></linearGradient>' +
+      '<pattern id="nmp" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(215,174,79,.16)"/><rect width="2" height="6" fill="rgba(215,174,79,.6)"/></pattern></defs>';
+    [0, 0.5, 1].forEach(function (f) {
+      var y = base - (base - top) * f;
+      svg += '<line x1="0" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="rgba(245,241,230,.08)"/>';
+      if (f) svg += '<text x="2" y="' + (y - 5) + '" fill="#7C8C81" font-size="12">' + reais(max * f) + '</text>';
+    });
+    var marca = Math.max(1, Math.round(n / 8));
+    dias.forEach(function (d, i) {
+      var h = d.valor ? Math.max(3, (base - top) * d.valor / max) : 0, x = i * passo + (passo - larg) / 2;
+      var futuro = d.dia > hoje, eHoje = d.dia === hoje;
+      if (h) svg += '<rect x="' + x.toFixed(1) + '" y="' + (base - h).toFixed(1) + '" width="' + larg.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + Math.min(5, larg / 3).toFixed(1) + '" fill="' + (futuro ? 'url(#nmp)' : 'url(#nmg)') + '"><title>' + dataBR(d.dia) + ': ' + reais(d.valor) + ' · ' + d.qtd + ' atendimento(s)</title></rect>';
+      if (eHoje) svg += '<circle cx="' + (x + larg / 2).toFixed(1) + '" cy="' + (base + 8) + '" r="3" fill="#F3DB94"/>';
+      var rot = n <= 31 ? ((i % marca === 0 || eHoje) ? d.dia.slice(8) : '') : (d.dia.slice(8) === '01' ? NM_MESES[+d.dia.slice(5, 7) - 1].slice(0, 3) : '');
+      if (rot) svg += '<text x="' + (x + larg / 2).toFixed(1) + '" y="' + (H - 6) + '" fill="' + (eHoje ? '#F3DB94' : '#7C8C81') + '" font-size="12" text-anchor="middle">' + rot + '</text>';
+    });
+    return svg + '</svg>';
+  }
+
+  function pintaNumeros() {
+    var cx = $('#nm-corpo');
+    if (DEMO) { cx.innerHTML = ''; return aviso(cx, 'aviso-neutro', 'Os números aparecem com o site ligado ao banco.'); }
+    pintaQuemNumeros();
+    var f = faixaNumeros();
+    cx.innerHTML = '<div class="carregando">Somando seus números…</div>';
+    sb.rpc('meus_numeros', { p_ini: f.ini, p_fim: f.fim, p_barbeiro: GESTOR ? nmBarbeiro : null }).then(resp).then(function (d) {
+      cx.innerHTML = '';
+      var total = d.feito + d.planos, ticket = d.avulsos ? Math.round(d.feito / d.avulsos) : 0;
+
+      // destaque
+      var hero = el('section', 'nm-hero'), quem = el('div', 'nm-quem');
+      if (d.barbeiro.foto) { var im = el('img'); im.src = d.barbeiro.foto; im.alt = ''; quem.appendChild(im); }
+      var qq = el('div'); qq.appendChild(el('span', null, GESTOR ? 'Números de' : 'Seus números')); qq.appendChild(el('b', null, d.barbeiro.nome)); quem.appendChild(qq);
+      hero.appendChild(quem);
+      hero.appendChild(el('p', 'nm-rot', (GESTOR ? 'Faturou ' : 'Você faturou ') + f.rot));
+      hero.appendChild(el('div', 'nm-valor', reais(total)));
+      var sub = el('div', 'nm-sub');
+      sub.appendChild(el('span', 'nm-pilula', 'Serviços ' + reais(d.feito)));
+      sub.appendChild(el('span', 'nm-pilula', 'Planos ' + reais(d.planos)));
+      if (d.a_receber) sub.appendChild(el('span', 'nm-pilula', '+ ' + reais(d.a_receber) + ' já marcados'));
+      if (d.anterior > 0) {
+        var pct = Math.round(total / d.anterior * 100), andando = d.fim > d.hoje;
+        var txt = pct >= 100 ? '▲ ' + (pct - 100) + '% acima de ' + f.ant
+          : andando ? 'Faltam ' + reais(d.anterior - total) + ' para bater ' + f.ant
+          : '▼ ' + (100 - pct) + '% abaixo de ' + f.ant;
+        sub.appendChild(el('span', 'nm-pilula ' + (pct >= 100 ? 'sobe' : andando ? '' : 'desce'), txt));
+        hero.appendChild(sub);
+        var meta = el('div', 'nm-meta'); meta.appendChild(el('span', null, 'Comparado com ' + f.ant + ' (' + reais(d.anterior) + ')')); meta.appendChild(el('b', null, pct + '%'));
+        var barra = el('div', 'nm-barra'), bi = el('i'); bi.style.width = Math.min(100, pct) + '%'; barra.appendChild(bi);
+        hero.appendChild(meta); hero.appendChild(barra);
+      } else hero.appendChild(sub);
+      cx.appendChild(hero);
+
+      // indicadores
+      var kp = el('div', 'nm-kpis');
+      [[NM_IC.tesoura, d.atendimentos, 'Atendimentos', d.pelo_plano ? d.pelo_plano + ' pelo plano' : ''],
+       [NM_IC.ticket, reais(ticket), 'Ticket médio', 'por serviço avulso'],
+       [NM_IC.gente, d.clientes, 'Clientes atendidos', d.novos ? d.novos + ' vieram pela 1ª vez' : ''],
+       [NM_IC.estrela, d.assinantes_ativos, 'Assinantes ativos', d.assinantes_vencidos ? d.assinantes_vencidos + ' vencidos' : ''],
+       [NM_IC.agenda, d.agendados, 'Ainda marcados', d.a_receber ? reais(d.a_receber) + ' a receber' : ''],
+       [NM_IC.falta, d.faltas, 'Faltas', d.cancelados ? d.cancelados + ' cancelados' : '']].forEach(function (x) {
+        var k = el('div', 'nm-kpi'), ic = el('div', 'ic'); ic.innerHTML = x[0]; k.appendChild(ic);
+        var t = el('div'); t.appendChild(el('b', null, String(x[1]))); t.appendChild(el('span', null, x[2])); if (x[3]) t.appendChild(el('small', null, x[3]));
+        k.appendChild(t); kp.appendChild(k);
+      });
+      cx.appendChild(kp);
+
+      // gráfico por dia
+      var g = el('section', 'nm-bloco nm-grafico');
+      g.appendChild(el('h3', null, 'Dia a dia'));
+      var melhor = d.por_dia.reduce(function (m, x) { return x.dia <= d.hoje && x.valor > (m ? m.valor : 0) ? x : m; }, null);
+      g.appendChild(el('p', 'nm-dica', melhor ? 'Melhor dia: ' + dataBR(melhor.dia) + ', com ' + reais(melhor.valor) + '.' : 'Ainda sem movimento nesse período.'));
+      var gr = el('div'); gr.innerHTML = graficoDias(d.por_dia, d.hoje); g.appendChild(gr);
+      var lg = el('div', 'nm-legenda');
+      lg.innerHTML = '<span><i style="background:linear-gradient(#F3DB94,#8F6A1C)"></i>Já feito</span><span><i style="background:repeating-linear-gradient(45deg,rgba(215,174,79,.6) 0 2px,rgba(215,174,79,.16) 2px 6px)"></i>Marcado (a receber)</span>';
+      g.appendChild(lg); cx.appendChild(g);
+
+      // serviços + semana
+      var dup = el('div', 'nm-dupla');
+      var sv = el('section', 'nm-bloco'); sv.appendChild(el('h3', null, 'O que mais sai'));
+      sv.appendChild(el('p', 'nm-dica', 'Serviços do período, do mais feito ao menos feito.'));
+      var maxS = Math.max.apply(null, d.por_servico.map(function (s) { return s.qtd; }).concat([1]));
+      if (!d.por_servico.length) sv.appendChild(el('p', 'vazio', 'Nada ainda.'));
+      d.por_servico.forEach(function (s) {
+        var h = el('div', 'nm-hbar'), t = el('div');
+        t.appendChild(el('span', null, s.nome)); t.appendChild(el('b', null, s.qtd + 'x' + (s.valor ? ' · ' + reais(s.valor) : '')));
+        var b = el('div', 'nm-barra'), i = el('i'); i.style.width = Math.round(s.qtd / maxS * 100) + '%'; b.appendChild(i);
+        h.appendChild(t); h.appendChild(b); sv.appendChild(h);
+      });
+      dup.appendChild(sv);
+      var se = el('section', 'nm-bloco'); se.appendChild(el('h3', null, 'Dias mais cheios'));
+      var maxW = Math.max.apply(null, d.por_semana.map(function (w) { return w.qtd; }).concat([0]));
+      var topo = d.por_semana.filter(function (w) { return maxW > 0 && w.qtd === maxW; })[0];
+      se.appendChild(el('p', 'nm-dica', topo ? NM_SEM_L[topo.dow] + ' é o dia mais forte.' : 'Ainda sem atendimentos.'));
+      var sm = el('div', 'nm-semana');
+      d.por_semana.forEach(function (w) {
+        var c = el('div', maxW > 0 && w.qtd === maxW ? 'topo' : null);
+        c.appendChild(el('span', null, String(w.qtd)));
+        var col = el('div', 'col'), i = el('i'); i.style.height = (maxW ? Math.round(w.qtd / maxW * 100) : 0) + '%'; col.appendChild(i); c.appendChild(col);
+        c.appendChild(el('span', null, NM_SEM[w.dow])); sm.appendChild(c);
+      });
+      se.appendChild(sm); dup.appendChild(se); cx.appendChild(dup);
+
+      // top clientes
+      var tc = el('section', 'nm-bloco'); tc.appendChild(el('h3', null, 'Clientes que mais vieram'));
+      tc.appendChild(el('p', 'nm-dica', 'Bom lugar pra escolher quem ganha um mimo. O botão abre o WhatsApp com a mensagem pronta; você revisa antes de enviar.'));
+      var tops = d.top_clientes || [];
+      if (!tops.length) tc.appendChild(el('p', 'vazio', 'Nenhum atendimento feito nesse período ainda.'));
+      var pod = el('div', 'nm-podio');
+      var ordem = window.matchMedia('(max-width:560px)').matches ? [0, 1, 2] : [1, 0, 2];
+      ordem.forEach(function (ix) {
+        var c = tops[ix]; if (!c) return;
+        var p = el('div', 'nm-pd p' + (ix + 1));
+        if (ix === 0) { var cr = el('span', 'coroa'); cr.innerHTML = NM_IC.coroa; p.appendChild(cr); }
+        p.appendChild(el('div', 'med', iniciais(c.nome)));
+        var nb = el('b', null, c.nome); if (c.assinante) nb.appendChild(el('span', 'nm-tag', 'Plano'));
+        p.appendChild(nb);
+        p.appendChild(el('strong', null, c.visitas + (c.visitas === 1 ? ' visita' : ' visitas')));
+        p.appendChild(el('span', 'lin', (ix + 1) + 'º lugar' + (c.gasto ? ' · ' + reais(c.gasto) : '')));
+        p.appendChild(el('span', 'lin', 'Última vez: ' + dataBR(c.ultima)));
+        var lk = linkMimo(c, d.barbeiro.nome);
+        if (lk) { var a = el('a', 'btn btn-zap mini', 'Mandar mimo'); a.href = lk; a.target = '_blank'; a.rel = 'noopener'; p.appendChild(a); }
+        pod.appendChild(p);
+      });
+      if (tops.length) tc.appendChild(pod);
+      if (tops.length > 3) {
+        var ul = el('ul', 'nm-lista');
+        tops.slice(3).forEach(function (c, k) {
+          var li = el('li'); li.appendChild(el('span', 'pos', String(k + 4)));
+          var q = el('div', 'q'), nb = el('b', null, c.nome); if (c.assinante) nb.appendChild(el('span', 'nm-tag', 'Plano'));
+          q.appendChild(nb); q.appendChild(el('span', null, c.visitas + (c.visitas === 1 ? ' visita' : ' visitas') + (c.gasto ? ' · ' + reais(c.gasto) : '') + ' · última ' + dataBR(c.ultima)));
+          li.appendChild(q);
+          var lk = linkMimo(c, d.barbeiro.nome);
+          if (lk) { var a = el('a', 'btn btn-linha mini', 'Mimo'); a.href = lk; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); }
+          ul.appendChild(li);
+        });
+        tc.appendChild(ul);
+      }
+      cx.appendChild(tc);
+      cx.appendChild(el('p', 'nm-nota', 'Como é calculado: serviços avulsos feitos até hoje (sem cancelados e faltas) + mensalidades de plano registradas no sistema (site ou "Recebi no balcão"). Mensalidade acertada por fora, sem registrar, não entra. Atendimento pelo plano conta como visita, mas não soma valor.'));
+    }).catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#nm-periodo button'), function (b) {
+    b.addEventListener('click', function () {
+      nmPeriodo = b.getAttribute('data-p');
+      Array.prototype.forEach.call(document.querySelectorAll('#nm-periodo button'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      pintaNumeros();
+    });
+  });
 
   /* ---------------- materiais ---------------- */
   function pintaMateriais() {
