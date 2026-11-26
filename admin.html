@@ -1423,7 +1423,7 @@
           acoes.appendChild(mp);
         }
         if (!a.cortesia && a.preco_centavos > 0 && (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago))) {
-          var pg = el('button', asDeve(a) ? 'btn btn-ouro mini' : 'btn btn-linha mini', 'Recebi no balcão'); pg.type = 'button';
+          var pg = el('button', asDeve(a) ? 'btn btn-ouro mini' : 'btn btn-linha mini', asDeve(a) ? 'Recebi no balcão' : 'Recebi o próximo mês'); pg.type = 'button';
           pg.addEventListener('click', function () {
             confirmar(corpo, 'Confirmar que ' + a.nome + ' pagou a mensalidade do ' + a.plano + ' no balcão? ' +
               (a.status === 'vencido' ? 'O plano volta a valer a partir de hoje.' : 'O próximo mês fica pago.'), 'Confirmar', function () {
