@@ -108,7 +108,7 @@
   .nm-bloco{background:var(--mata);border:1px solid var(--borda);border-radius:18px;padding:1.2rem 1.2rem 1rem;margin-bottom:1rem;min-width:0}
   .nm-bloco h3{font-family:var(--display);font-size:1.1rem;color:var(--creme);margin:0 0 .2rem;letter-spacing:.03em}
   .nm-bloco .nm-dica{font-size:.85rem;color:var(--cinza);margin:0 0 .9rem}
-  .nm-dupla{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .nm-dupla{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
   @media (max-width:760px){.nm-dupla{grid-template-columns:1fr}}
   .nm-grafico svg{width:100%;height:auto;display:block}
   .nm-legenda{display:flex;gap:1rem;flex-wrap:wrap;font-size:.8rem;color:var(--cinza);margin-top:.5rem}
@@ -119,8 +119,8 @@
   .nm-hbar .nm-barra{height:8px}
   .nm-semana{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;height:160px;margin-top:.4rem}
   .nm-semana > div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:.3rem;font-size:.78rem;color:var(--cinza)}
-  .nm-semana .col{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
-  .nm-semana .col i{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:rgba(215,174,79,.28);min-height:4px}
+  .nm-semana .col{flex:1;min-height:0;width:100%;position:relative}
+  .nm-semana .col i{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:rgba(215,174,79,.28);min-height:4px}
   .nm-semana .topo .col i{background:var(--ouro-gradiente)}
   .nm-semana .topo{color:var(--ouro-claro);font-weight:800}
   .nm-podio{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;align-items:end;margin:1.2rem 0 1rem}
@@ -964,8 +964,8 @@
     });
   }
 
-  function graficoDias(dias, hoje) {
-    var W = 720, H = 220, top = 20, base = 188, n = dias.length || 1;
+  function graficoDias(dias, hoje, largura) {
+    var W = Math.max(340, Math.min(1100, largura || 720)), H = 220, top = 20, base = 188, n = dias.length || 1;
     var max = Math.max.apply(null, dias.map(function (d) { return d.valor; }).concat([1]));
     var passo = W / n, larg = Math.max(2, Math.min(26, passo * 0.68));
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Faturamento por dia"><defs>' +
@@ -1026,7 +1026,7 @@
       var kp = el('div', 'nm-kpis');
       [[NM_IC.tesoura, d.atendimentos, 'Atendimentos', d.pelo_plano ? d.pelo_plano + ' pelo plano' : ''],
        [NM_IC.ticket, reais(ticket), 'Ticket médio', 'por serviço avulso'],
-       [NM_IC.gente, d.clientes, 'Clientes atendidos', d.novos ? d.novos + ' vieram pela 1ª vez' : ''],
+       [NM_IC.gente, d.clientes, 'Clientes atendidos', d.novos ? d.novos + ' novos na agenda' : ''],
        [NM_IC.estrela, d.assinantes_ativos, 'Assinantes ativos', d.assinantes_vencidos ? d.assinantes_vencidos + ' vencidos' : ''],
        [NM_IC.agenda, d.agendados, 'Ainda marcados', d.a_receber ? reais(d.a_receber) + ' a receber' : ''],
        [NM_IC.falta, d.faltas, 'Faltas', d.cancelados ? d.cancelados + ' cancelados' : '']].forEach(function (x) {
@@ -1041,7 +1041,7 @@
       g.appendChild(el('h3', null, 'Dia a dia'));
       var melhor = d.por_dia.reduce(function (m, x) { return x.dia <= d.hoje && x.valor > (m ? m.valor : 0) ? x : m; }, null);
       g.appendChild(el('p', 'nm-dica', melhor ? 'Melhor dia: ' + dataBR(melhor.dia) + ', com ' + reais(melhor.valor) + '.' : 'Ainda sem movimento nesse período.'));
-      var gr = el('div'); gr.innerHTML = graficoDias(d.por_dia, d.hoje); g.appendChild(gr);
+      var gr = el('div'); gr.innerHTML = graficoDias(d.por_dia, d.hoje, cx.clientWidth - 40); g.appendChild(gr);
       var lg = el('div', 'nm-legenda');
       lg.innerHTML = '<span><i style="background:linear-gradient(#F3DB94,#8F6A1C)"></i>Já feito</span><span><i style="background:repeating-linear-gradient(45deg,rgba(215,174,79,.6) 0 2px,rgba(215,174,79,.16) 2px 6px)"></i>Marcado (a receber)</span>';
       g.appendChild(lg); cx.appendChild(g);
