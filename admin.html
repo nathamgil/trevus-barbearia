@@ -79,6 +79,34 @@
   .mt-tabela th{text-align:left;color:var(--cinza);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .4rem;border-bottom:1px solid var(--borda)}
   .mt-tabela td{padding:.55rem .4rem;border-bottom:1px solid var(--borda);vertical-align:top}
 
+  /* ---- Planos (controle de pagamento e saldo) ---- */
+  .as-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1.2rem}
+  .as-kpi{text-align:left;background:var(--mata);border:1px solid var(--borda);border-radius:16px;padding:.95rem 1.05rem;min-height:44px;cursor:pointer;color:var(--creme);font:inherit}
+  .as-kpi b{display:block;font-family:var(--display);font-size:1.6rem;line-height:1.1}
+  .as-kpi span{display:block;font-size:.85rem;color:var(--cinza);margin-top:.15rem}
+  .as-kpi small{display:block;font-size:.8rem;font-weight:700;margin-top:.25rem}
+  .as-kpi.verde b,.as-kpi.verde small{color:#7FE3A5}
+  .as-kpi.vermelho b,.as-kpi.vermelho small{color:#F29A95}
+  .as-kpi.ouro b,.as-kpi.ouro small{color:var(--ouro-claro)}
+  .as-kpi[aria-pressed="true"]{border-color:var(--ouro);background:rgba(215,174,79,.12);box-shadow:0 0 0 1px var(--ouro) inset}
+  .as-filtro-aviso{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;font-size:.9rem;color:var(--ouro-claro);margin:-.4rem 0 .9rem}
+  .agenda-item.as-deve{border-left:3px solid #E06560;padding-left:.7rem}
+  .agenda-item.as-ok{border-left:3px solid #3FBF78;padding-left:.7rem}
+  .as-pg{display:inline-flex;align-items:center;gap:.4rem;font-size:.88rem;font-weight:800;padding:.3rem .7rem;border-radius:10px;margin:.45rem 0 .1rem}
+  .as-pg.ok{background:rgba(63,191,120,.14);color:#8FE8B3}
+  .as-pg.deve{background:rgba(224,101,96,.16);color:#F6BDBA}
+  .as-pg.neutro{background:rgba(245,241,230,.07);color:var(--cinza)}
+  .as-pg.parceria{background:rgba(215,174,79,.14);color:var(--ouro-claro)}
+  .as-renova{display:block;font-size:.82rem;color:var(--cinza);margin-bottom:.4rem}
+  .as-saldo{display:grid;gap:.35rem;margin:.35rem 0 .2rem}
+  .as-cota{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.88rem}
+  .as-cota em{font-style:normal;min-width:6.6rem;color:var(--cinza)}
+  .as-bolas{display:inline-flex;gap:4px}
+  .as-bolas i{width:13px;height:13px;border-radius:50%;background:rgba(245,241,230,.12)}
+  .as-bolas i.tem{background:var(--ouro-gradiente)}
+  .as-cota b{font-weight:800;color:var(--creme)}
+  .as-cota b.zero{color:#F29A95}
+
   /* ---- Meus números ---- */
   .nm-hero{position:relative;overflow:hidden;border-radius:22px;padding:1.6rem 1.6rem 1.4rem;margin:.4rem 0 1rem;
     background:radial-gradient(120% 140% at 100% 0%,rgba(215,174,79,.22) 0%,rgba(215,174,79,0) 55%),linear-gradient(160deg,var(--musgo),var(--mata));
@@ -225,7 +253,7 @@
       <button class="aba" role="tab" aria-selected="false" data-aba="balcao">Lançar cliente</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="proximos">Próximos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="folgas">Folgas e feriados</button>
-      <button class="aba" role="tab" aria-selected="false" data-aba="assinantes">Assinantes</button>
+      <button class="aba" role="tab" aria-selected="false" data-aba="assinantes">Planos</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="materiais">Materiais</button>
       <button class="aba" role="tab" aria-selected="false" data-aba="master" id="aba-master" hidden>Visão geral</button>
     </div>
@@ -385,8 +413,8 @@
       <div class="metricas" id="as-metricas"></div>
       <div class="dupla" style="align-items:start">
         <div>
-          <h3>Assinantes</h3>
-          <p class="sub" style="margin-top:.5rem">Quem assinou pelo site ou foi cadastrado aqui. Vencido = mensalidade em aberto: o plano fica travado até pagar. Use os botões de barbeiro lá em cima para ver só os assinantes de um.</p>
+          <h3>Clientes de plano</h3>
+          <p class="sub" style="margin-top:.5rem">Quem pagou o mês, quem está devendo e quanto cada um ainda tem para usar. Toque nos quadros acima para filtrar. Pagou em dinheiro ou Pix direto? Use "Recebi no balcão" para o sistema saber. Os botões de barbeiro lá em cima mostram só os clientes de um.</p>
           <div class="campo" style="margin-top:1rem"><label for="as-busca">Procurar assinante</label><input id="as-busca" type="search" placeholder="Nome, e-mail ou WhatsApp" autocomplete="off"></div>
           <div class="cartao" style="margin-top:.6rem" id="lista-assinantes"></div>
         </div>
@@ -1278,6 +1306,39 @@
       .catch(function (e) { aviso(cx, 'aviso-erro', e.message || 'Falha ao carregar.'); });
   }
 
+  var AS_FILTRO = 'todos';
+  function asDeve(a) { return !a.cortesia && a.preco_centavos > 0 && (a.status === 'vencido' || (a.status === 'ativo' && a.pago_ciclo === false)); }
+  function asValorDevido(a) { return (a.preco_centavos || 0) + (a.status === 'vencido' ? (a.multa_centavos || 0) : 0); }
+  function asAcabando(a) {
+    if (a.status !== 'ativo') return false;
+    return Object.keys(a.cotas || {}).some(function (k) { var r = (a.saldo || {})[k] || 0; return r < 50 && r <= 1; });
+  }
+  function asPagamento(a) {
+    if (a.status === 'cancelado') return null;
+    if (a.status === 'aguardando_pagamento') return ['deve', 'Compra no site não paga'];
+    if (a.cortesia) return ['parceria', 'Parceria · não paga mensalidade'];
+    if (!(a.preco_centavos > 0)) return ['neutro', 'Valor a combinar com o barbeiro'];
+    if (a.status === 'vencido') return ['deve', 'Falta pagar ' + dinheiro(asValorDevido(a)) + ' · plano travado'];
+    if (a.pago_ciclo === false) return ['deve', 'Falta pagar o mês · ' + dinheiro(a.preco_centavos)];
+    if (a.proximo_pago && !a.sem_trava) return ['ok', 'Pago · o próximo mês também'];
+    return ['ok', 'Mês pago' + (a.ultimo_pago && a.ultimo_pago >= (a.ciclo_inicio || '') ? ' em ' + dataBR(a.ultimo_pago).slice(0, 5) : '')];
+  }
+  function asSaldo(a) {
+    var box = el('div', 'as-saldo');
+    Object.keys(a.cotas || {}).forEach(function (k) {
+      var tot = a.cotas[k], r = (a.saldo || {})[k] || 0, linha = el('div', 'as-cota');
+      linha.appendChild(el('em', null, (NOMES_COTA[k] || k).replace(/^./, function (c) { return c.toUpperCase(); })));
+      if (r >= 50) { linha.appendChild(el('b', null, 'Ilimitado')); box.appendChild(linha); return; }
+      var bolas = el('span', 'as-bolas');
+      for (var i = 0; i < Math.max(tot, r); i++) bolas.appendChild(el('i', i < r ? 'tem' : null));
+      bolas.setAttribute('aria-hidden', 'true');
+      linha.appendChild(bolas);
+      linha.appendChild(el('b', r === 0 ? 'zero' : null, r === 0 ? 'acabou (usou ' + tot + ')' : r + ' de ' + tot + (r === 1 ? ' restante' : ' restantes')));
+      box.appendChild(linha);
+    });
+    return box;
+  }
+
   function desenhaAssinantes() {
     var cx = $('#lista-assinantes');
     var termo = ($('#as-busca').value || '').trim().toLowerCase(), termoNum = soDigitos(termo);
@@ -1285,17 +1346,36 @@
     (function () {
       var ativos = lista.filter(function (a) { return a.status === 'ativo'; });
       var vencidos = lista.filter(function (a) { return a.status === 'vencido'; });
-      var logo = ativos.filter(function (a) { return !a.proximo_pago && a.vence_em && (deIso(a.vence_em) - deIso(iso(new Date()))) / 86400000 <= 3; });
-      var m = $('#as-metricas'); m.innerHTML = '';
-      [[ativos.length, 'Ativos'], [vencidos.length, 'Vencidos'], [logo.length, 'Vencem em até 3 dias']].forEach(function (x) {
-        var d = el('div','metrica'); d.appendChild(el('b', null, String(x[0]))); d.appendChild(el('span', null, x[1])); m.appendChild(d);
+      var pagos = ativos.filter(function (a) { return a.pago_ciclo === true; });
+      var aberto = lista.filter(asDeve);
+      var acabando = ativos.filter(asAcabando);
+      function somaV(l) { return l.reduce(function (t, a) { return t + (a.preco_centavos || 0); }, 0); }
+      function somaD(l) { return l.reduce(function (t, a) { return t + asValorDevido(a); }, 0); }
+      var m = $('#as-metricas'); m.innerHTML = ''; m.className = 'as-kpis';
+      [['todos', '', ativos.length + vencidos.length, 'Clientes de plano', ativos.length + ' ativos' + (vencidos.length ? ' · ' + vencidos.length + ' travados' : '')],
+       ['pagos', 'verde', pagos.length, 'Pagaram o mês', pagos.length ? dinheiro(somaV(pagos)) : ''],
+       ['aberto', 'vermelho', aberto.length, 'Falta pagar', aberto.length ? dinheiro(somaD(aberto)) + ' a receber' : 'ninguém devendo'],
+       ['acabando', 'ouro', acabando.length, 'Saldo acabando', 'com 1 ou nenhum restante']].forEach(function (x) {
+        var d = el('button', 'as-kpi ' + x[1]); d.type = 'button'; d.setAttribute('aria-pressed', AS_FILTRO === x[0] ? 'true' : 'false');
+        d.appendChild(el('b', null, String(x[2]))); d.appendChild(el('span', null, x[3])); if (x[4]) d.appendChild(el('small', null, x[4]));
+        d.addEventListener('click', function () { AS_FILTRO = AS_FILTRO === x[0] ? 'todos' : x[0]; desenhaAssinantes(); });
+        m.appendChild(d);
       });
       cx.innerHTML = '';
+      if (AS_FILTRO !== 'todos') {
+        lista = lista.filter(AS_FILTRO === 'pagos' ? function (a) { return a.status === 'ativo' && a.pago_ciclo === true; }
+          : AS_FILTRO === 'aberto' ? asDeve : asAcabando);
+        var fa = el('div', 'as-filtro-aviso');
+        fa.appendChild(el('span', null, 'Mostrando: ' + ({ pagos: 'quem pagou o mês', aberto: 'quem falta pagar', acabando: 'saldo acabando' })[AS_FILTRO]));
+        var lp = el('button', 'btn btn-linha mini', 'Ver todos'); lp.type = 'button';
+        lp.addEventListener('click', function () { AS_FILTRO = 'todos'; desenhaAssinantes(); });
+        fa.appendChild(lp); cx.appendChild(fa);
+      }
       if (termo) lista = lista.filter(function (a) {
         return (a.nome || '').toLowerCase().indexOf(termo) >= 0 || (a.email || '').toLowerCase().indexOf(termo) >= 0 ||
           (termoNum.length >= 4 && soDigitos(a.telefone).indexOf(termoNum) >= 0);
       });
-      if (!lista.length) return cx.appendChild(el('p','vazio', termo ? 'Ninguém com esse nome.' : 'Nenhum assinante ainda.'));
+      if (!lista.length) return cx.appendChild(el('p','vazio', termo ? 'Ninguém com esse nome.' : AS_FILTRO !== 'todos' ? 'Ninguém nessa situação.' : 'Nenhum assinante ainda.'));
       var grupos = [];
       if (filtro) grupos.push({ nome: null, itens: lista });
       else {
@@ -1311,7 +1391,7 @@
         cx.appendChild(h);
       }
       g.itens.forEach(function (a) {
-        var item = el('div','agenda-item');
+        var item = el('div','agenda-item' + (asDeve(a) ? ' as-deve' : a.status === 'ativo' && a.pago_ciclo === true ? ' as-ok' : ''));
         var foto = el('div','agenda-hora'); foto.style.width = '3.4rem';
         if (a.foto) { var im = el('img'); im.src = a.foto; im.alt = ''; im.style.cssText = 'width:48px;height:48px;border-radius:50%;object-fit:cover'; foto.appendChild(im); }
         else foto.textContent = a.nome.charAt(0).toUpperCase();
@@ -1323,8 +1403,10 @@
           : a.status === 'aguardando_pagamento' ? ['tag-off', 'Compra não paga'] : ['tag-fim', 'Cancelado'];
         topo.appendChild(el('span','tag ' + st[0], st[1]));
         corpo.appendChild(topo);
-        var saldo = Object.keys(a.cotas || {}).map(function (k) { return ((a.saldo || {})[k] || 0) + '/' + a.cotas[k] + ' ' + (NOMES_COTA[k] || k); }).join(' · ');
-        corpo.appendChild(el('span', null, a.plano + ' · vence ' + (a.vence_em ? dataBR(a.vence_em) : '—') + (a.status === 'ativo' ? ' · saldo ' + saldo : '')));
+        var pgS = asPagamento(a);
+        if (pgS) corpo.appendChild(el('span', 'as-pg ' + pgS[0], pgS[1]));
+        corpo.appendChild(el('span', 'as-renova', a.plano + (a.vence_em ? (a.status === 'vencido' ? ' · venceu ' : ' · renova ') + dataBR(a.vence_em) : '')));
+        if (a.status === 'ativo') corpo.appendChild(asSaldo(a));
         corpo.appendChild(el('span', null, ' · ' + (a.email ? a.email + (a.tem_acesso ? '' : ' (ainda não criou a senha)') : 'sem e-mail ainda')));
         if (a.obs) corpo.appendChild(el('span','obs-assinante', 'Obs.: ' + a.obs));
         var acoes = el('div','acoes'); acoes.style.marginTop = '.6rem';
@@ -1339,8 +1421,8 @@
           mp.addEventListener('click', function () { formPlano(a, corpo); });
           acoes.appendChild(mp);
         }
-        if (!a.cortesia && (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago))) {
-          var pg = el('button','btn btn-linha mini','Recebi no balcão'); pg.type = 'button';
+        if (!a.cortesia && a.preco_centavos > 0 && (a.status === 'vencido' || (a.status === 'ativo' && !a.proximo_pago))) {
+          var pg = el('button', asDeve(a) ? 'btn btn-ouro mini' : 'btn btn-linha mini', 'Recebi no balcão'); pg.type = 'button';
           pg.addEventListener('click', function () {
             confirmar(corpo, 'Confirmar que ' + a.nome + ' pagou a mensalidade do ' + a.plano + ' no balcão? ' +
               (a.status === 'vencido' ? 'O plano volta a valer a partir de hoje.' : 'O próximo mês fica pago.'), 'Confirmar', function () {
