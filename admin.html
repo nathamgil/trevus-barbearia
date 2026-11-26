@@ -1325,7 +1325,8 @@
   }
   function asSaldo(a) {
     var box = el('div', 'as-saldo');
-    Object.keys(a.cotas || {}).forEach(function (k) {
+    var ORD = ['corte','barba','sobrancelha','acabamento'];
+    Object.keys(a.cotas || {}).sort(function (x, y) { return (ORD.indexOf(x) + 9) % 9 - (ORD.indexOf(y) + 9) % 9; }).forEach(function (k) {
       var tot = a.cotas[k], r = (a.saldo || {})[k] || 0, linha = el('div', 'as-cota');
       linha.appendChild(el('em', null, (NOMES_COTA[k] || k).replace(/^./, function (c) { return c.toUpperCase(); })));
       if (r >= 50) { linha.appendChild(el('b', null, 'Ilimitado')); box.appendChild(linha); return; }
